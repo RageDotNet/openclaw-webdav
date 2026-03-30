@@ -81,12 +81,12 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 
 ## Phase 5: OpenClaw Integration
 
-- [ ] WD-24: Implement HTTP adapter layer (`parseOpenClawRequest` / `sendHandlerResult`)
-- [ ] WD-24-QA: Verify adapter unit tests pass with mockApi; no WebDAV logic in adapter file
-- [ ] WD-25: Implement config adapter (`pluginConfig` → `WebDavConfig` with validation)
-- [ ] WD-25-QA: Verify defaults correct, invalid config throws descriptive error, unit tests pass
-- [ ] WD-26: Implement route registration adapter (dispatch, readOnly enforcement, maxUploadSizeMb)
-- [ ] WD-26-QA: Verify mockApi.registerHttpRoute called correctly, readOnly blocks writes with 405, PUT over limit returns 413
+- [x] WD-24: Implement HTTP adapter layer (`parseOpenClawRequest` / `sendHandlerResult`)
+- [x] WD-24-QA: Verify adapter unit tests pass with mockApi; no WebDAV logic in adapter file
+- [x] WD-25: Implement config adapter (`pluginConfig` → `WebDavConfig` with validation)
+- [x] WD-25-QA: Verify defaults correct, invalid config throws descriptive error, unit tests pass
+- [x] WD-26: Implement route registration adapter (dispatch, readOnly enforcement, maxUploadSizeMb)
+- [x] WD-26-QA: Verify mockApi.registerHttpRoute called correctly, readOnly blocks writes with 405, PUT over limit returns 413
 - [ ] WD-27: Implement plugin entry point (`src/index.ts`) and complete `openclaw.plugin.json` manifest
 - [ ] WD-27-QA: Verify plugin loads in OpenClaw without errors; configSchema validates correctly
 - [ ] WD-28: Integration smoke tests (curl commands for OPTIONS/GET/PUT/PROPFIND/DELETE/LOCK/UNLOCK)
