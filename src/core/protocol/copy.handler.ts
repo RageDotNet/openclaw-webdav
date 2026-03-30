@@ -10,12 +10,15 @@ export interface CopyHandlerOptions {
   /** The host of this server, used to detect cross-server destinations */
   serverHost?: string;
   lockManager?: LockManager;
+  /** URL path prefix to strip from Destination header paths (e.g. "/webdav") */
+  routePrefix?: string;
 }
 
 function parseDestination(
   destinationHeader: string,
   serverHost: string | undefined,
   workspaceDir: string,
+  routePrefix?: string,
 ): { valid: false; status: number; body: string } | { valid: true; destPath: string; existed: boolean } {
   let destUrl: URL;
   try {
@@ -29,7 +32,11 @@ function parseDestination(
     return { valid: false, status: 502, body: buildErrorXml("no-conflicting-lock") };
   }
 
-  const destPathRaw = decodeURIComponent(destUrl.pathname);
+  let destPathRaw = decodeURIComponent(destUrl.pathname);
+  // Strip route prefix if present
+  if (routePrefix && destPathRaw.startsWith(routePrefix)) {
+    destPathRaw = destPathRaw.slice(routePrefix.length) || "/";
+  }
   const validation = validatePath(destPathRaw, workspaceDir);
   if (!validation.valid) {
     return { valid: false, status: validation.errorCode, body: buildErrorXml("no-conflicting-lock") };
@@ -64,7 +71,7 @@ export async function handleCopy(
   const srcPath = srcValidation.normalizedPath;
 
   // Parse destination
-  const destResult = parseDestination(destinationHeader, opts.serverHost, opts.workspaceDir);
+  const destResult = parseDestination(destinationHeader, opts.serverHost, opts.workspaceDir, opts.routePrefix);
   if (!destResult.valid) {
     return {
       status: destResult.status,

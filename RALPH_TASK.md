@@ -93,13 +93,14 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [x] WD-28: Integration smoke tests (curl commands for OPTIONS/GET/PUT/PROPFIND/DELETE/LOCK/UNLOCK)
 - [x] WD-28-QA: Verify all smoke tests pass against local OpenClaw; readOnly config blocks writes
   <!-- Verified against conformance server; OpenClaw runtime verification deferred (no local install) -->
-- [ ] WD-29: Integration buffer — fix core layer issues discovered during OpenClaw integration
-- [ ] WD-29-QA: Verify no regressions in unit tests or litmus conformance after fixes
+- [x] WD-29: Integration buffer — fix core layer issues discovered during OpenClaw integration
+- [x] WD-29-QA: Verify no regressions in unit tests or litmus conformance after fixes
+  <!-- Fixed: routePrefix stripping for /webdav path prefix in routes adapter and COPY/MOVE destination parsing -->
 
 ## Phase 6: Hardening & E2E Testing
 
-- [ ] WD-30: Path traversal hardening audit + dedicated test file + WARN logging
-- [ ] WD-30-QA: Verify all attack vectors rejected; WARN log emitted for traversal attempts
+- [x] WD-30: Path traversal hardening audit + dedicated test file + WARN logging
+- [x] WD-30-QA: Verify all attack vectors rejected; WARN log emitted for traversal attempts
 - [ ] WD-31: Implement rate limiting (sliding-window per IP, 429/Retry-After, bulk op exemption)
 - [ ] WD-31-QA: Verify limit enforcement, Retry-After header, PROPFIND depth:infinity not false-limited
 - [ ] WD-32: E2E testing with real WebDAV clients (Cyberduck, macOS Finder, Windows Explorer, davfs2)

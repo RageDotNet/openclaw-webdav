@@ -62,6 +62,7 @@ export function registerWebDavRoutes(
     workspaceDir: config.rootPath,
     serverHost: undefined as string | undefined,
     lockManager,
+    routePrefix: "/webdav",
   };
 
   const maxUploadBytes = config.maxUploadSizeMb * 1024 * 1024;
@@ -73,7 +74,10 @@ export function registerWebDavRoutes(
       let result: HandlerResult;
 
       try {
-        const parsedReq = await parseOpenClawRequest(req);
+        const rawReq = await parseOpenClawRequest(req);
+        // Strip the /webdav prefix so handlers see paths relative to the root
+        const strippedPath = rawReq.path.replace(/^\/webdav/, "") || "/";
+        const parsedReq = { ...rawReq, path: strippedPath };
         const method = parsedReq.method;
 
         // Read-only mode: block all write methods
