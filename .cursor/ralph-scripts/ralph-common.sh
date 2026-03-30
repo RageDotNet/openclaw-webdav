@@ -563,7 +563,8 @@ run_iteration() {
         kill $agent_pid 2>/dev/null || true
 	;;
       "*")
-        echo L:$line
+        #echo L:$line
+	foo=bar
         ;;
     esac
   done < "$fifo"
