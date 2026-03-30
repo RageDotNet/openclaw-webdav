@@ -39,16 +39,16 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 
 ## Phase 2: Read-Only Protocol
 
-- [ ] WD-08: Implement OPTIONS handler (DAV: 1,2, Allow header, MS-Author-Via)
-- [ ] WD-08-QA: Verify unit tests pass; correct headers returned; no body
-- [ ] WD-09: Implement GET handler (stream file, 200/404/403/405, Content-Type/Length/Last-Modified/ETag)
-- [ ] WD-09-QA: Verify unit tests pass with MemoryStorageAdapter; streaming confirmed (no full buffer)
-- [ ] WD-10: Implement HEAD handler (same headers as GET, no body)
-- [ ] WD-10-QA: Verify same headers as GET, body is undefined/empty
-- [ ] WD-11: Implement PROPFIND Depth:0 handler (207 multi-status XML, standard properties)
-- [ ] WD-11-QA: Verify 207 XML structure, correct DAV: namespace, all required properties present
-- [ ] WD-12: Implement PROPFIND Depth:1 and infinity handler (with safety depth limit)
-- [ ] WD-12-QA: Verify Depth:1 children, Depth:infinity recursion, depth limit returns 403 with error XML
+- [x] WD-08: Implement OPTIONS handler (DAV: 1,2, Allow header, MS-Author-Via)
+- [x] WD-08-QA: Verify unit tests pass; correct headers returned; no body
+- [x] WD-09: Implement GET handler (stream file, 200/404/403/405, Content-Type/Length/Last-Modified/ETag)
+- [x] WD-09-QA: Verify unit tests pass with MemoryStorageAdapter; streaming confirmed (no full buffer)
+- [x] WD-10: Implement HEAD handler (same headers as GET, no body)
+- [x] WD-10-QA: Verify same headers as GET, body is undefined/empty
+- [x] WD-11: Implement PROPFIND Depth:0 handler (207 multi-status XML, standard properties)
+- [x] WD-11-QA: Verify 207 XML structure, correct DAV: namespace, all required properties present
+- [x] WD-12: Implement PROPFIND Depth:1 and infinity handler (with safety depth limit)
+- [x] WD-12-QA: Verify Depth:1 children, Depth:infinity recursion, depth limit returns 403 with error XML
 
 ## Phase 3: Read-Write Protocol
 
