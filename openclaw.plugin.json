@@ -1,0 +1,59 @@
+{
+  "id": "openclaw-webdav",
+  "name": "WebDAV",
+  "version": "0.1.0",
+  "description": "Mount your OpenClaw workspace as a WebDAV drive. Compatible with Cyberduck, macOS Finder, Windows Explorer, davfs2, and any RFC 4918 WebDAV client.",
+  "author": "OpenClaw Community",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "extensions": ["httpRoute"],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "rootPath": {
+        "type": "string",
+        "description": "Root directory to expose via WebDAV. Defaults to workspaceDir.",
+        "default": ""
+      },
+      "readOnly": {
+        "type": "boolean",
+        "description": "If true, all write operations (PUT, DELETE, MKCOL, COPY, MOVE, LOCK, UNLOCK) return 405.",
+        "default": false
+      },
+      "maxUploadSizeMb": {
+        "type": "number",
+        "description": "Maximum upload size in megabytes. Requests exceeding this return 413.",
+        "default": 100,
+        "minimum": 1
+      },
+      "rateLimitPerIp": {
+        "type": "object",
+        "description": "Per-IP rate limiting configuration.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "max": {
+            "type": "number",
+            "description": "Maximum requests per window.",
+            "default": 100,
+            "minimum": 1
+          },
+          "windowSeconds": {
+            "type": "number",
+            "description": "Sliding window duration in seconds.",
+            "default": 10,
+            "minimum": 1
+          }
+        },
+        "default": {
+          "enabled": true,
+          "max": 100,
+          "windowSeconds": 10
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}
