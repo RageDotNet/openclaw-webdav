@@ -1,12 +1,14 @@
 import * as path from "node:path";
 import { Readable } from "node:stream";
-import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
+import type { HandlerResult, LockManager, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
 import { buildErrorXml } from "../util/errorXml.js";
+import { PreconditionError, checkPreconditions } from "./preconditions.js";
 
 export interface PutHandlerOptions {
   workspaceDir: string;
+  lockManager?: LockManager;
 }
 
 export async function handlePut(
@@ -24,6 +26,18 @@ export async function handlePut(
   }
 
   const { normalizedPath } = validation;
+
+  // Check preconditions (If: header / lock check)
+  if (opts.lockManager) {
+    try {
+      await checkPreconditions(req, normalizedPath, opts.lockManager, storage);
+    } catch (err) {
+      if (err instanceof PreconditionError) {
+        return { status: err.code, headers: { "Content-Type": "application/xml" }, body: buildErrorXml("precondition-failed") };
+      }
+      throw err;
+    }
+  }
 
   // Check if target is a directory
   try {

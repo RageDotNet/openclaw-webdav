@@ -1,11 +1,13 @@
 import * as path from "node:path";
-import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
+import type { HandlerResult, LockManager, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
 import { buildErrorXml } from "../util/errorXml.js";
+import { PreconditionError, checkPreconditions } from "./preconditions.js";
 
 export interface DeleteHandlerOptions {
   workspaceDir: string;
+  lockManager?: LockManager;
 }
 
 export async function handleDelete(
@@ -24,6 +26,18 @@ export async function handleDelete(
 
   const { normalizedPath } = validation;
   const depthHeader = (req.headers["depth"] as string | undefined) ?? "infinity";
+
+  // Check preconditions (If: header / lock check)
+  if (opts.lockManager) {
+    try {
+      await checkPreconditions(req, normalizedPath, opts.lockManager);
+    } catch (err) {
+      if (err instanceof PreconditionError) {
+        return { status: err.code, headers: { "Content-Type": "application/xml" }, body: buildErrorXml("precondition-failed") };
+      }
+      throw err;
+    }
+  }
 
   let stat;
   try {

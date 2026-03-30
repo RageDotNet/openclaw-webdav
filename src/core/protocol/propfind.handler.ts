@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { DOMParser } from "@xmldom/xmldom";
 import { create } from "xmlbuilder2";
 import type { HandlerResult, ParsedRequest, StatResult, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
@@ -40,6 +41,28 @@ export async function handlePropfind(
 ): Promise<HandlerResult> {
   const maxDepth = opts.maxDepth ?? DEFAULT_MAX_DEPTH;
   const depthHeader = (req.headers["depth"] as string | undefined) ?? "infinity";
+
+  // Validate XML body if present (RFC 4918 requires 400 for malformed XML)
+  if (req.body.length > 0) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(req.body.toString("utf-8"), "application/xml");
+      const parseErrors = doc.getElementsByTagName("parsererror");
+      if (parseErrors.length > 0) {
+        return {
+          status: 400,
+          headers: { "Content-Type": "application/xml" },
+          body: buildErrorXml("no-external-entities"),
+        };
+      }
+    } catch {
+      return {
+        status: 400,
+        headers: { "Content-Type": "application/xml" },
+        body: buildErrorXml("no-external-entities"),
+      };
+    }
+  }
 
   const validation = validatePath(req.path, opts.workspaceDir);
   if (!validation.valid) {

@@ -1,6 +1,7 @@
-import * as url from "node:url";
-import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
+import * as path from "node:path";
+import type { HandlerResult, LockManager, ParsedRequest, StorageAdapter, StatResult } from "../../types.js";
 import { StorageError } from "../../types.js";
+import { PreconditionError, checkPreconditions } from "./preconditions.js";
 import { validatePath } from "../storage/pathValidation.js";
 import { buildErrorXml } from "../util/errorXml.js";
 
@@ -8,6 +9,7 @@ export interface CopyHandlerOptions {
   workspaceDir: string;
   /** The host of this server, used to detect cross-server destinations */
   serverHost?: string;
+  lockManager?: LockManager;
 }
 
 function parseDestination(
@@ -86,12 +88,30 @@ export async function handleCopy(
 
   // Check destination
   const destExists = await storage.exists(destPath);
+
+  // COPY is a read from source — source locks do NOT block COPY (RFC 4918 §7.4).
+  // Only the destination lock matters.
+  if (opts.lockManager && destExists) {
+    try {
+      await checkPreconditions(req, destPath, opts.lockManager);
+    } catch (err) {
+      if (err instanceof PreconditionError) {
+        return { status: err.code, headers: { "Content-Type": "application/xml" }, body: buildErrorXml("precondition-failed") };
+      }
+      throw err;
+    }
+  }
   if (destExists && !overwrite) {
     return {
       status: 412,
       headers: { "Content-Type": "application/xml" },
       body: buildErrorXml("precondition-failed"),
     };
+  }
+
+  // If destination exists and overwrite is allowed, remove it first
+  if (destExists) {
+    await removeRecursive(destPath, storage);
   }
 
   // Perform copy
@@ -102,4 +122,24 @@ export async function handleCopy(
     headers: {},
     body: undefined,
   };
+}
+
+async function removeRecursive(filePath: string, storage: StorageAdapter): Promise<void> {
+  let stat: StatResult;
+  try {
+    stat = await storage.stat(filePath);
+  } catch {
+    return;
+  }
+
+  if (stat.isFile) {
+    await storage.unlink(filePath);
+    return;
+  }
+
+  const children = await storage.readdir(filePath);
+  for (const child of children) {
+    await removeRecursive(path.join(filePath, child), storage);
+  }
+  await storage.rmdir(filePath);
 }

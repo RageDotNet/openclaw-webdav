@@ -1,11 +1,14 @@
-import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
+import * as path from "node:path";
+import type { HandlerResult, LockManager, ParsedRequest, StorageAdapter, StatResult } from "../../types.js";
 import { StorageError } from "../../types.js";
-import { validatePath } from "../storage/pathValidation.js";
 import { buildErrorXml } from "../util/errorXml.js";
+import { validatePath } from "../storage/pathValidation.js";
+import { PreconditionError, checkPreconditions } from "./preconditions.js";
 
 export interface MoveHandlerOptions {
   workspaceDir: string;
   serverHost?: string;
+  lockManager?: LockManager;
 }
 
 function parseDestination(
@@ -80,6 +83,18 @@ export async function handleMove(
     throw err;
   }
 
+  // Check preconditions on source
+  if (opts.lockManager) {
+    try {
+      await checkPreconditions(req, srcPath, opts.lockManager);
+    } catch (err) {
+      if (err instanceof PreconditionError) {
+        return { status: err.code, headers: { "Content-Type": "application/xml" }, body: buildErrorXml("precondition-failed") };
+      }
+      throw err;
+    }
+  }
+
   // Check destination
   const destExists = await storage.exists(destPath);
   if (destExists && !overwrite) {
@@ -90,6 +105,11 @@ export async function handleMove(
     };
   }
 
+  // If destination exists and overwrite is allowed, remove it first
+  if (destExists) {
+    await removeRecursive(destPath, storage);
+  }
+
   await storage.rename(srcPath, destPath);
 
   return {
@@ -97,4 +117,24 @@ export async function handleMove(
     headers: {},
     body: undefined,
   };
+}
+
+async function removeRecursive(filePath: string, storage: StorageAdapter): Promise<void> {
+  let stat: StatResult;
+  try {
+    stat = await storage.stat(filePath);
+  } catch {
+    return;
+  }
+
+  if (stat.isFile) {
+    await storage.unlink(filePath);
+    return;
+  }
+
+  const children = await storage.readdir(filePath);
+  for (const child of children) {
+    await removeRecursive(path.join(filePath, child), storage);
+  }
+  await storage.rmdir(filePath);
 }

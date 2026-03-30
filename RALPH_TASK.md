@@ -65,18 +65,19 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 
 ## Phase 4: Locking Protocol
 
-- [ ] WD-18: Implement `InMemoryLockManager` (opaquelocktoken UUIDs, expiration, getLocks path lookup)
-- [ ] WD-18-QA: Verify add/remove, expiration cleanup, path lookup, exclusive vs shared conflict
-- [ ] WD-19: Implement LOCK handler pt1 — lockinfo XML parsing + Timeout header + store lock (400/423)
-- [ ] WD-19-QA: Verify valid lockinfo parse, malformed XML 400, duplicate exclusive lock 423
-- [ ] WD-20: Implement LOCK handler pt2 — lockdiscovery response XML + Lock-Token header
-- [ ] WD-20-QA: Verify response XML structure matches RFC 4918 §15, Lock-Token header format correct
-- [ ] WD-21: Implement UNLOCK handler (204/400/409/404)
-- [ ] WD-21-QA: Verify successful unlock, missing token 400, wrong token 409, missing resource 404
-- [ ] WD-22: Implement If: header precondition handling (PreconditionError, 412/423, all write handlers)
-- [ ] WD-22-QA: Verify valid token passes, wrong token 412, locked resource no token 423, all write handlers integrated
-- [ ] WD-23: Litmus WebDAV conformance testing (standalone HTTP server wrapper, `npm run test:conformance`)
-- [ ] WD-23-QA: Verify litmus basic + locking tests pass (or failures documented with justification)
+- [x] WD-18: Implement `InMemoryLockManager` (opaquelocktoken UUIDs, expiration, getLocks path lookup)
+- [x] WD-18-QA: Verify add/remove, expiration cleanup, path lookup, exclusive vs shared conflict
+- [x] WD-19: Implement LOCK handler pt1 — lockinfo XML parsing + Timeout header + store lock (400/423)
+- [x] WD-19-QA: Verify valid lockinfo parse, malformed XML 400, duplicate exclusive lock 423
+- [x] WD-20: Implement LOCK handler pt2 — lockdiscovery response XML + Lock-Token header
+- [x] WD-20-QA: Verify response XML structure matches RFC 4918 §15, Lock-Token header format correct
+- [x] WD-21: Implement UNLOCK handler (204/400/409/404)
+- [x] WD-21-QA: Verify successful unlock, missing token 400, wrong token 409, missing resource 404
+- [x] WD-22: Implement If: header precondition handling (PreconditionError, 412/423, all write handlers)
+- [x] WD-22-QA: Verify valid token passes, wrong token 412, locked resource no token 423, all write handlers integrated
+- [x] WD-23: Litmus WebDAV conformance testing (standalone HTTP server wrapper, `npm run test:conformance`)
+- [x] WD-23-QA: Verify litmus basic + locking tests pass (or failures documented with justification)
+  <!-- Results: basic 100%, copymove 100%, locks 92.7% (3 failures: owner_modify PROPPATCH stub — known limitation) -->
 
 ## Phase 5: OpenClaw Integration
 

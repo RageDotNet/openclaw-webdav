@@ -12,7 +12,7 @@
     "build": "tsc --project tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:conformance": "tsx test/conformance/server.ts",
+    "test:conformance": "tsx test/conformance/run-litmus.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -32,10 +32,12 @@
     "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.9",
     "mime-types": "^3.0.2",
     "xmlbuilder2": "^4.0.3"
   }
