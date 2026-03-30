@@ -31,7 +31,7 @@ function waitForServer(url: string, maxWaitMs = 5000): Promise<void> {
 
 async function main() {
   // Start the conformance server
-  const server = spawn("node", ["--import", "tsx/esm", "test/conformance/server.ts"], {
+  const server = spawn("node", ["--import", "tsx/esm", ".conformance/server.ts"], {
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, PORT: String(PORT) },
   });

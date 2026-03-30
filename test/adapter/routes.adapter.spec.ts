@@ -119,13 +119,14 @@ describe("registerWebDavRoutes", () => {
     await storage.mkdir("/workspace");
   });
 
-  it("calls api.registerHttpRoute with /webdav/* path and gateway auth", () => {
+  it("calls api.registerHttpRoute with /webdav path, prefix match, and gateway auth", () => {
     const { api } = createMockApi();
     registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager);
 
     expect(api.registerHttpRoute).toHaveBeenCalledOnce();
     const call = (api.registerHttpRoute as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(call.path).toBe("/webdav/*");
+    expect(call.path).toBe("/webdav");
+    expect(call.match).toBe("prefix");
     expect(call.auth).toBe("gateway");
     expect(typeof call.handler).toBe("function");
   });

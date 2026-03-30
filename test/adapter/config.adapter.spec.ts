@@ -69,10 +69,9 @@ describe("parsePluginConfig", () => {
       );
     });
 
-    it("throws for empty rootPath", () => {
-      expect(() => parsePluginConfig({ rootPath: "   " }, WORKSPACE)).toThrow(
-        /rootPath must not be empty/,
-      );
+    it("falls back to workspaceDir for whitespace-only rootPath", () => {
+      const config = parsePluginConfig({ rootPath: "   " }, WORKSPACE);
+      expect(config.rootPath).toBe(WORKSPACE);
     });
 
     it("throws for non-boolean readOnly", () => {

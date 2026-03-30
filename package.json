@@ -5,6 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "openclaw": {
+    "extensions": ["./dist/index.js"]
+  },
   "engines": {
     "node": ">=18"
   },
@@ -12,7 +15,7 @@
     "build": "tsc --project tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:conformance": "tsx test/conformance/run-litmus.ts",
+    "test:conformance": "tsx .conformance/run-litmus.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

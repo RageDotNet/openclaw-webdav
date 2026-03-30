@@ -24,7 +24,8 @@ export interface PluginApi {
   registerHttpRoute(opts: {
     path: string;
     auth: string;
-    handler: (req: OpenClawRequest, res: OpenClawResponse) => Promise<void>;
+    match?: string;
+    handler: (req: unknown, res: unknown) => Promise<void>;
   }): void;
   logger: {
     error(message: string, ...args: unknown[]): void;
@@ -70,13 +71,16 @@ export function registerWebDavRoutes(
   const rateLimiter = new SlidingWindowRateLimiter(config.rateLimitPerIp);
 
   api.registerHttpRoute({
-    path: "/webdav/*",
+    path: "/webdav",
     auth: "gateway",
-    handler: async (req: OpenClawRequest, res: OpenClawResponse): Promise<void> => {
+    match: "prefix",
+    handler: async (req: unknown, res: unknown): Promise<void> => {
+      const typedReq = req as OpenClawRequest;
+      const typedRes = res as OpenClawResponse;
       let result: HandlerResult;
 
       try {
-        const rawReq = await parseOpenClawRequest(req);
+        const rawReq = await parseOpenClawRequest(typedReq);
         // Strip the /webdav prefix so handlers see paths relative to the root
         const strippedPath = rawReq.path.replace(/^\/webdav/, "") || "/";
         const parsedReq = { ...rawReq, path: strippedPath };
@@ -98,7 +102,7 @@ export function registerWebDavRoutes(
               },
               body: "Too Many Requests",
             };
-            await sendHandlerResult(res, result);
+            await sendHandlerResult(typedRes, result);
             return;
           }
         }
@@ -129,7 +133,7 @@ export function registerWebDavRoutes(
         result = { status: 500, headers: {}, body: "Internal Server Error" };
       }
 
-      await sendHandlerResult(res, result);
+      await sendHandlerResult(typedRes, result);
     },
   });
 }

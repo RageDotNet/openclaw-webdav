@@ -51,14 +51,14 @@ export function parsePluginConfig(
 
 function parseRootPath(config: Record<string, unknown>, workspaceDir: string): string {
   const val = config["rootPath"];
-  if (val === undefined || val === null) {
+  if (val === undefined || val === null || val === "") {
     return workspaceDir;
   }
   if (typeof val !== "string") {
     throw new Error(`WebDAV config error: rootPath must be a string, got ${typeof val}`);
   }
   if (val.trim() === "") {
-    throw new Error("WebDAV config error: rootPath must not be empty");
+    return workspaceDir;
   }
   return val;
 }
