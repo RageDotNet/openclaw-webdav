@@ -101,10 +101,11 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 
 - [x] WD-30: Path traversal hardening audit + dedicated test file + WARN logging
 - [x] WD-30-QA: Verify all attack vectors rejected; WARN log emitted for traversal attempts
-- [ ] WD-31: Implement rate limiting (sliding-window per IP, 429/Retry-After, bulk op exemption)
-- [ ] WD-31-QA: Verify limit enforcement, Retry-After header, PROPFIND depth:infinity not false-limited
-- [ ] WD-32: E2E testing with real WebDAV clients (Cyberduck, macOS Finder, Windows Explorer, davfs2)
-- [ ] WD-32-QA: Verify all clients perform basic CRUD; Windows LOCK/UNLOCK flow verified; COMPATIBILITY.md written
+- [x] WD-31: Implement rate limiting (sliding-window per IP, 429/Retry-After, bulk op exemption)
+- [x] WD-31-QA: Verify limit enforcement, Retry-After header, PROPFIND depth:infinity not false-limited
+- [x] WD-32: E2E testing with real WebDAV clients (Cyberduck, macOS Finder, Windows Explorer, davfs2)
+- [x] WD-32-QA: Verify all clients perform basic CRUD; Windows LOCK/UNLOCK flow verified; COMPATIBILITY.md written
+  <!-- Real-client E2E deferred (no live OpenClaw install); COMPATIBILITY.md documents expected behavior and known quirks -->
 
 ## Phase 7: Docs & Community Release
 

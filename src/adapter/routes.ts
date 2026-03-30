@@ -6,6 +6,7 @@ import type { WebDavConfig } from "./config.js";
 import type { StorageAdapter, LockManager, HandlerResult } from "../types.js";
 import type { OpenClawRequest, OpenClawResponse } from "./http.js";
 import { parseOpenClawRequest, sendHandlerResult } from "./http.js";
+import { SlidingWindowRateLimiter, isBulkOperation } from "./rateLimiter.js";
 import { handleOptions } from "../core/protocol/options.handler.js";
 import { handleGet } from "../core/protocol/get.handler.js";
 import { handleHead } from "../core/protocol/head.handler.js";
@@ -66,6 +67,7 @@ export function registerWebDavRoutes(
   };
 
   const maxUploadBytes = config.maxUploadSizeMb * 1024 * 1024;
+  const rateLimiter = new SlidingWindowRateLimiter(config.rateLimitPerIp);
 
   api.registerHttpRoute({
     path: "/webdav/*",
@@ -79,6 +81,27 @@ export function registerWebDavRoutes(
         const strippedPath = rawReq.path.replace(/^\/webdav/, "") || "/";
         const parsedReq = { ...rawReq, path: strippedPath };
         const method = parsedReq.method;
+
+        // Rate limiting — bulk operations count as a single request
+        if (config.rateLimitPerIp.enabled && !isBulkOperation(method, parsedReq.headers)) {
+          const clientIp =
+            (parsedReq.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ??
+            (parsedReq.headers["x-real-ip"] as string) ??
+            "unknown";
+          const rateResult = rateLimiter.check(clientIp);
+          if (!rateResult.allowed) {
+            result = {
+              status: 429,
+              headers: {
+                "Retry-After": String(rateResult.retryAfter ?? 1),
+                "Content-Type": "text/plain",
+              },
+              body: "Too Many Requests",
+            };
+            await sendHandlerResult(res, result);
+            return;
+          }
+        }
 
         // Read-only mode: block all write methods
         if (config.readOnly && WRITE_METHODS.has(method)) {
