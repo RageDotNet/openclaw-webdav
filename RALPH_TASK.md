@@ -52,16 +52,16 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 
 ## Phase 3: Read-Write Protocol
 
-- [ ] WD-13: Implement PUT handler (stream body, 201/204, parent dir creation, 409/403/423)
-- [ ] WD-13-QA: Verify unit tests pass; streaming confirmed; parent-is-file returns 409
-- [ ] WD-14: Implement DELETE handler (204/404/409, Depth semantics, 423 on locked)
-- [ ] WD-14-QA: Verify file delete, empty dir, non-empty dir Depth:0 vs infinity, locked resource 423
-- [ ] WD-15: Implement MKCOL handler (201/405/409/415/403)
-- [ ] WD-15-QA: Verify success, already-exists 405, missing-parent 409, body-present 415
-- [ ] WD-16: Implement COPY handler (Destination/Overwrite headers, Depth:0/infinity, 201/204/400/412/502)
-- [ ] WD-16-QA: Verify file copy, recursive collection, Overwrite:F conflict 412, cross-server 502
-- [ ] WD-17: Implement MOVE handler (same Destination/Overwrite semantics as COPY)
-- [ ] WD-17-QA: Verify rename, cross-directory move, Overwrite conflict, error codes match RFC 4918
+- [x] WD-13: Implement PUT handler (stream body, 201/204, parent dir creation, 409/403/423)
+- [x] WD-13-QA: Verify unit tests pass; streaming confirmed; parent-is-file returns 409
+- [x] WD-14: Implement DELETE handler (204/404/409, Depth semantics, 423 on locked)
+- [x] WD-14-QA: Verify file delete, empty dir, non-empty dir Depth:0 vs infinity, locked resource 423
+- [x] WD-15: Implement MKCOL handler (201/405/409/415/403)
+- [x] WD-15-QA: Verify success, already-exists 405, missing-parent 409, body-present 415
+- [x] WD-16: Implement COPY handler (Destination/Overwrite headers, Depth:0/infinity, 201/204/400/412/502)
+- [x] WD-16-QA: Verify file copy, recursive collection, Overwrite:F conflict 412, cross-server 502
+- [x] WD-17: Implement MOVE handler (same Destination/Overwrite semantics as COPY)
+- [x] WD-17-QA: Verify rename, cross-directory move, Overwrite conflict, error codes match RFC 4918
 
 ## Phase 4: Locking Protocol
 
