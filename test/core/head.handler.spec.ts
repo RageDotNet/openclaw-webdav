@@ -51,11 +51,14 @@ describe("handleHead", () => {
     expect(res.statusCode).toBe(404);
   });
 
-  it("returns 405 for directory", async () => {
+  it("returns 200 for directory with same Content-Length as GET listing", async () => {
     const adapter = await setupAdapter();
-    const req = createMockRequest("HEAD", "/docs");
-    const res = await invokeHandler((r) => handleHead(r, adapter, opts), req);
-    expect(res.statusCode).toBe(405);
+    const getRes = await invokeHandler((r) => handleGet(r, adapter, opts), createMockRequest("GET", "/"));
+    const headRes = await invokeHandler((r) => handleHead(r, adapter, opts), createMockRequest("HEAD", "/"));
+    expect(headRes.statusCode).toBe(200);
+    expect(headRes.body.length).toBe(0);
+    expect(headRes.headers["content-length"]).toBe(getRes.headers["content-length"]);
+    expect(headRes.headers["content-type"]).toBe(getRes.headers["content-type"]);
   });
 
   it("returns 403 for path outside workspace", async () => {

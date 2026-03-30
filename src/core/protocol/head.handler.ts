@@ -1,7 +1,7 @@
 import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
-import { buildFileHeaders } from "./get.handler.js";
+import { buildDirectoryListingPlainText, buildFileHeaders } from "./get.handler.js";
 
 export interface HeadHandlerOptions {
   workspaceDir: string;
@@ -30,7 +30,16 @@ export async function handleHead(
   }
 
   if (stat.isDirectory) {
-    return { status: 405, headers: { Allow: "PROPFIND, OPTIONS" }, body: undefined };
+    const { byteLength } = await buildDirectoryListingPlainText(storage, normalizedPath);
+    return {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": byteLength,
+        "Last-Modified": stat.mtime.toUTCString(),
+      },
+      body: undefined,
+    };
   }
 
   const headers = await buildFileHeaders(normalizedPath, storage);

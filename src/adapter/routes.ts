@@ -18,6 +18,19 @@ import { handleCopy } from "../core/protocol/copy.handler.js";
 import { handleMove } from "../core/protocol/move.handler.js";
 import { handleLock } from "../core/protocol/lock.handler.js";
 import { handleUnlock } from "../core/protocol/unlock.handler.js";
+import {
+  extractClientGatewayCredential,
+  getAuthorizationHeader,
+  loadWebDavAuthExpectation,
+  safeEqualSecret,
+  WEBDAV_UNAUTHORIZED,
+  webDavAuthMisconfigured,
+} from "./gatewayWebDavAuth.js";
+
+/** Load full OpenClaw config (same object the gateway uses) for resolving gateway.auth. */
+export interface WebDavRouteContext {
+  loadOpenClawConfig: () => unknown;
+}
 
 /** Minimal OpenClaw plugin API surface needed for route registration */
 export interface PluginApi {
@@ -29,6 +42,7 @@ export interface PluginApi {
   }): void;
   logger: {
     error(message: string, ...args: unknown[]): void;
+    info?(message: string, ...args: unknown[]): void;
   };
 }
 
@@ -59,6 +73,7 @@ export function registerWebDavRoutes(
   config: WebDavConfig,
   storage: StorageAdapter,
   lockManager: LockManager,
+  routeContext: WebDavRouteContext,
 ): void {
   const handlerOpts = {
     workspaceDir: config.rootPath,
@@ -72,14 +87,38 @@ export function registerWebDavRoutes(
 
   api.registerHttpRoute({
     path: "/webdav",
-    auth: "gateway",
+    auth: "plugin",
     match: "prefix",
     handler: async (req: unknown, res: unknown): Promise<void> => {
       const typedReq = req as OpenClawRequest;
       const typedRes = res as OpenClawResponse;
+
+      if (process.env.DEBUG_WEBDAV) {
+        const pathname = new URL(typedReq.url ?? "/", "http://localhost").pathname;
+        api.logger.info?.(`[webdav] ${typedReq.method ?? "?"} ${pathname}`);
+      }
+
       let result: HandlerResult;
 
       try {
+        const rawMethod = (typedReq.method ?? "GET").toUpperCase();
+        if (rawMethod !== "OPTIONS") {
+          const expectation = await loadWebDavAuthExpectation(routeContext.loadOpenClawConfig());
+          if (expectation.kind === "misconfigured") {
+            result = webDavAuthMisconfigured(expectation.detail);
+            await sendHandlerResult(typedRes, result);
+            return;
+          }
+          if (expectation.kind === "secret") {
+            const cred = extractClientGatewayCredential(getAuthorizationHeader(typedReq));
+            if (!cred || !safeEqualSecret(cred, expectation.value)) {
+              result = WEBDAV_UNAUTHORIZED;
+              await sendHandlerResult(typedRes, result);
+              return;
+            }
+          }
+        }
+
         const rawReq = await parseOpenClawRequest(typedReq);
         // Strip the /webdav prefix so handlers see paths relative to the root
         const strippedPath = rawReq.path.replace(/^\/webdav/, "") || "/";

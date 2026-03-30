@@ -6,12 +6,14 @@ These tests validate the plugin running inside a real OpenClaw instance.
 
 1. OpenClaw installed and running (default port: 18789)
 2. `openclaw-webdav` plugin installed and enabled in OpenClaw
-3. A valid OpenClaw gateway token (set `OPENCLAW_TOKEN` env var)
+3. Your gateway token or password (same value the gateway uses for HTTP auth)
 
 ```bash
 export BASE_URL="http://localhost:18789/webdav"
 export TOKEN="your-gateway-token-here"
-export AUTH="-H \"Authorization: Bearer $TOKEN\""
+# Basic: any username, password = gateway token (recommended for copy-paste with curl)
+export AUTH="-u \"dav:$TOKEN\""
+# Or Bearer: export AUTH="-H \"Authorization: Bearer $TOKEN\""
 ```
 
 Alternatively, run against the conformance server (no auth required):

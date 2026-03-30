@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Readable } from "node:stream";
 import { registerWebDavRoutes } from "../../src/adapter/routes.js";
-import type { PluginApi } from "../../src/adapter/routes.js";
+import type { PluginApi, WebDavRouteContext } from "../../src/adapter/routes.js";
 import type { WebDavConfig } from "../../src/adapter/config.js";
 import { MemoryStorageAdapter } from "../../src/core/storage/memoryAdapter.js";
 import { InMemoryLockManager } from "../../src/core/locks/lockManager.js";
@@ -15,7 +15,7 @@ function createMockApi(): { api: PluginApi; getHandler: () => RouteHandler } {
     registerHttpRoute: vi.fn((opts) => {
       registeredHandler = opts.handler;
     }),
-    logger: { error: vi.fn() },
+    logger: { error: vi.fn(), info: vi.fn() },
   };
 
   return {
@@ -99,6 +99,34 @@ function createMockRes(): MockRes {
   return res;
 }
 
+const TEST_GATEWAY_TOKEN = "test-gateway-token-xyz";
+
+function testRouteContext(params?: { mode?: "token" | "password" | "none" }): WebDavRouteContext {
+  const mode = params?.mode ?? "token";
+  if (mode === "none") {
+    return {
+      loadOpenClawConfig: () => ({ gateway: { auth: { mode: "none" } } }),
+    };
+  }
+  if (mode === "password") {
+    return {
+      loadOpenClawConfig: () => ({
+        gateway: { auth: { mode: "password", password: TEST_GATEWAY_TOKEN } },
+      }),
+    };
+  }
+  return {
+    loadOpenClawConfig: () => ({
+      gateway: { auth: { mode: "token", token: TEST_GATEWAY_TOKEN } },
+    }),
+  };
+}
+
+function basicAuth(password: string, username = "any-user"): Record<string, string> {
+  const b64 = Buffer.from(`${username}:${password}`, "utf8").toString("base64");
+  return { authorization: `Basic ${b64}` };
+}
+
 const DEFAULT_CONFIG: WebDavConfig = {
   rootPath: "/workspace",
   readOnly: false,
@@ -119,21 +147,77 @@ describe("registerWebDavRoutes", () => {
     await storage.mkdir("/workspace");
   });
 
-  it("calls api.registerHttpRoute with /webdav path, prefix match, and gateway auth", () => {
+  it("calls api.registerHttpRoute with /webdav path, prefix match, and plugin HTTP auth", () => {
     const { api } = createMockApi();
-    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager);
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
 
     expect(api.registerHttpRoute).toHaveBeenCalledOnce();
     const call = (api.registerHttpRoute as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(call.path).toBe("/webdav");
     expect(call.match).toBe("prefix");
-    expect(call.auth).toBe("gateway");
+    expect(call.auth).toBe("plugin");
     expect(typeof call.handler).toBe("function");
+  });
+
+  it("returns 401 without credentials when gateway uses a shared secret", async () => {
+    const { api, getHandler } = createMockApi();
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
+
+    const req = createMockReq("GET", "/file.txt");
+    const res = createMockRes();
+    await getHandler()(req, res);
+
+    expect(res.statusCode).toBe(401);
+    const wwwAuth = Object.entries(res.headers).find(
+      ([k]) => k.toLowerCase() === "www-authenticate",
+    )?.[1];
+    expect(String(wwwAuth ?? "")).toContain("Basic");
+  });
+
+  it("accepts Basic auth with arbitrary username and gateway token as password", async () => {
+    await storage.writeFile("/workspace/secret.txt", Buffer.from("x"));
+
+    const { api, getHandler } = createMockApi();
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
+
+    const req = createMockReq("GET", "/secret.txt", basicAuth(TEST_GATEWAY_TOKEN, "ignored-login"));
+    const res = createMockRes();
+    await getHandler()(req, res);
+
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("accepts Bearer with gateway token", async () => {
+    await storage.writeFile("/workspace/bearer.txt", Buffer.from("y"));
+
+    const { api, getHandler } = createMockApi();
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
+
+    const req = createMockReq("GET", "/bearer.txt", {
+      authorization: `Bearer ${TEST_GATEWAY_TOKEN}`,
+    });
+    const res = createMockRes();
+    await getHandler()(req, res);
+
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("allows unauthenticated requests when gateway auth mode is none", async () => {
+    await storage.writeFile("/workspace/open.txt", Buffer.from("z"));
+
+    const { api, getHandler } = createMockApi();
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext({ mode: "none" }));
+
+    const req = createMockReq("GET", "/open.txt");
+    const res = createMockRes();
+    await getHandler()(req, res);
+
+    expect(res.statusCode).toBe(200);
   });
 
   it("handles OPTIONS request", async () => {
     const { api, getHandler } = createMockApi();
-    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager);
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
 
     const req = createMockReq("OPTIONS", "/webdav/");
     const res = createMockRes();
@@ -147,9 +231,9 @@ describe("registerWebDavRoutes", () => {
     await storage.writeFile("/workspace/test.txt", Buffer.from("hello"));
 
     const { api, getHandler } = createMockApi();
-    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager);
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
 
-    const req = createMockReq("GET", "/test.txt");
+    const req = createMockReq("GET", "/test.txt", basicAuth(TEST_GATEWAY_TOKEN));
     const res = createMockRes();
     await getHandler()(req, res);
 
@@ -158,9 +242,9 @@ describe("registerWebDavRoutes", () => {
 
   it("returns 405 for unknown methods", async () => {
     const { api, getHandler } = createMockApi();
-    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager);
+    registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
 
-    const req = createMockReq("PATCH", "/webdav/file.txt");
+    const req = createMockReq("PATCH", "/webdav/file.txt", basicAuth(TEST_GATEWAY_TOKEN));
     const res = createMockRes();
     await getHandler()(req, res);
 
@@ -172,9 +256,9 @@ describe("registerWebDavRoutes", () => {
 
     it("blocks PUT with 405", async () => {
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager);
+      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager, testRouteContext());
 
-      const req = createMockReq("PUT", "/webdav/file.txt", {}, "content");
+      const req = createMockReq("PUT", "/webdav/file.txt", basicAuth(TEST_GATEWAY_TOKEN), "content");
       const res = createMockRes();
       await getHandler()(req, res);
 
@@ -183,9 +267,9 @@ describe("registerWebDavRoutes", () => {
 
     it("blocks DELETE with 405", async () => {
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager);
+      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager, testRouteContext());
 
-      const req = createMockReq("DELETE", "/webdav/file.txt");
+      const req = createMockReq("DELETE", "/webdav/file.txt", basicAuth(TEST_GATEWAY_TOKEN));
       const res = createMockRes();
       await getHandler()(req, res);
 
@@ -194,9 +278,9 @@ describe("registerWebDavRoutes", () => {
 
     it("blocks MKCOL with 405", async () => {
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager);
+      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager, testRouteContext());
 
-      const req = createMockReq("MKCOL", "/webdav/newdir/");
+      const req = createMockReq("MKCOL", "/webdav/newdir/", basicAuth(TEST_GATEWAY_TOKEN));
       const res = createMockRes();
       await getHandler()(req, res);
 
@@ -205,9 +289,9 @@ describe("registerWebDavRoutes", () => {
 
     it("blocks LOCK with 405", async () => {
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager);
+      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager, testRouteContext());
 
-      const req = createMockReq("LOCK", "/webdav/file.txt");
+      const req = createMockReq("LOCK", "/webdav/file.txt", basicAuth(TEST_GATEWAY_TOKEN));
       const res = createMockRes();
       await getHandler()(req, res);
 
@@ -218,9 +302,9 @@ describe("registerWebDavRoutes", () => {
       await storage.writeFile("/workspace/file.txt", Buffer.from("hello"));
 
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager);
+      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager, testRouteContext());
 
-      const req = createMockReq("GET", "/file.txt");
+      const req = createMockReq("GET", "/file.txt", basicAuth(TEST_GATEWAY_TOKEN));
       const res = createMockRes();
       await getHandler()(req, res);
 
@@ -229,7 +313,7 @@ describe("registerWebDavRoutes", () => {
 
     it("allows OPTIONS in readOnly mode", async () => {
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager);
+      registerWebDavRoutes(api, readOnlyConfig, storage, lockManager, testRouteContext());
 
       const req = createMockReq("OPTIONS", "/webdav/");
       const res = createMockRes();
@@ -244,9 +328,10 @@ describe("registerWebDavRoutes", () => {
       const smallConfig: WebDavConfig = { ...DEFAULT_CONFIG, maxUploadSizeMb: 1 };
 
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, smallConfig, storage, lockManager);
+      registerWebDavRoutes(api, smallConfig, storage, lockManager, testRouteContext());
 
       const req = createMockReq("PUT", "/file.txt", {
+        ...basicAuth(TEST_GATEWAY_TOKEN),
         "content-length": String(2 * 1024 * 1024), // 2MB
       });
       const res = createMockRes();
@@ -257,11 +342,17 @@ describe("registerWebDavRoutes", () => {
 
     it("allows PUT within size limit", async () => {
       const { api, getHandler } = createMockApi();
-      registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager);
+      registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
 
-      const req = createMockReq("PUT", "/file.txt", {
-        "content-length": "100",
-      }, "hello");
+      const req = createMockReq(
+        "PUT",
+        "/file.txt",
+        {
+          ...basicAuth(TEST_GATEWAY_TOKEN),
+          "content-length": "100",
+        },
+        "hello",
+      );
       const res = createMockRes();
       await getHandler()(req, res);
 
@@ -276,9 +367,9 @@ describe("registerWebDavRoutes", () => {
     const brokenStorage = new MemoryStorageAdapter();
     vi.spyOn(brokenStorage, "stat").mockRejectedValue(new Error("disk failure"));
 
-    registerWebDavRoutes(api, DEFAULT_CONFIG, brokenStorage, lockManager);
+    registerWebDavRoutes(api, DEFAULT_CONFIG, brokenStorage, lockManager, testRouteContext());
 
-    const req = createMockReq("GET", "/file.txt");
+    const req = createMockReq("GET", "/file.txt", basicAuth(TEST_GATEWAY_TOKEN));
     const res = createMockRes();
     await getHandler()(req, res);
 

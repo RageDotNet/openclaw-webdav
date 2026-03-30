@@ -13,6 +13,30 @@ export interface GetHandlerOptions {
  * Build the shared response headers for a file resource.
  * Used by both GET and HEAD handlers.
  */
+/**
+ * UTF-8 plain-text listing for GET on a collection: one entry per line;
+ * subdirectories end with `/`. Sorted by locale.
+ */
+export async function buildDirectoryListingPlainText(
+  storage: StorageAdapter,
+  dirPath: string,
+): Promise<{ text: string; byteLength: number }> {
+  const names = await storage.readdir(dirPath);
+  names.sort((a, b) => a.localeCompare(b));
+  const lines: string[] = [];
+  for (const name of names) {
+    const child = path.join(dirPath, name);
+    try {
+      const st = await storage.stat(child);
+      lines.push(st.isDirectory ? `${name}/` : name);
+    } catch {
+      // omit entries that disappeared between readdir and stat
+    }
+  }
+  const text = lines.length > 0 ? `${lines.join("\n")}\n` : "";
+  return { text, byteLength: Buffer.byteLength(text, "utf8") };
+}
+
 export async function buildFileHeaders(
   filePath: string,
   storage: StorageAdapter,
@@ -57,7 +81,16 @@ export async function handleGet(
   }
 
   if (stat.isDirectory) {
-    return { status: 405, headers: { Allow: "PROPFIND, OPTIONS" }, body: undefined };
+    const { text, byteLength } = await buildDirectoryListingPlainText(storage, normalizedPath);
+    return {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": byteLength,
+        "Last-Modified": stat.mtime.toUTCString(),
+      },
+      body: text,
+    };
   }
 
   const headers = await buildFileHeaders(normalizedPath, storage);

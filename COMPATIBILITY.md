@@ -2,6 +2,12 @@
 
 This document describes compatibility with common WebDAV clients and any known quirks.
 
+## Authentication
+
+Use **HTTP Basic** with **any username**; set the **password** to the **gateway token** (token
+mode) or **gateway password** (password mode). **`Authorization: Bearer`** with the same secret
+also works (e.g. for `curl`).
+
 ## Test Matrix
 
 | Operation | Cyberduck | macOS Finder | Windows Explorer | davfs2 | curl |

@@ -20,6 +20,7 @@ export default {
     pluginConfig: Record<string, unknown>;
     runtime: {
       state: { resolveStateDir(): string };
+      config: { loadConfig(): unknown };
     };
     logger: {
       debug(message: string, ...args: unknown[]): void;
@@ -37,13 +38,23 @@ export default {
     const stateDir = api.runtime.state.resolveStateDir();
     const config = parsePluginConfig(api.pluginConfig, stateDir);
 
-    api.logger.info(`[webdav] starting — root: ${config.rootPath}, readOnly: ${config.readOnly}`);
+    api.logger.info(
+      `[webdav] starting — root: ${config.rootPath}, readOnly: ${config.readOnly} (HTTP Basic/Bearer = gateway token or password)`,
+    );
+
+    if (process.env.DEBUG_WEBDAV) {
+      api.logger.info(
+        "[webdav] DEBUG_WEBDAV=1: per-request logs after WebDAV auth (Basic password or Bearer = gateway secret).",
+      );
+    }
 
     const storage = new NodeFsStorageAdapter();
     lockManager = new InMemoryLockManager();
 
-    registerWebDavRoutes(api, config, storage, lockManager);
+    registerWebDavRoutes(api, config, storage, lockManager, {
+      loadOpenClawConfig: () => api.runtime.config.loadConfig(),
+    });
 
-    api.logger.info("[webdav] registered route: /webdav/*");
+    api.logger.info("[webdav] registered /webdav (plugin HTTP route; auth validated inside WebDAV)");
   },
 };

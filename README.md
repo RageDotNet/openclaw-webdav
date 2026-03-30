@@ -6,6 +6,7 @@ Mount your OpenClaw workspace as a WebDAV drive. Access your files from any WebD
 
 - Full RFC 4918 WebDAV compliance (DAV level 1 and 2)
 - All standard methods: OPTIONS, GET, HEAD, PUT, DELETE, MKCOL, COPY, MOVE, PROPFIND, LOCK, UNLOCK
+- **GET / HEAD on directories:** plain-text listing (one name per line; folders end with `/`). Rich browsing remains **PROPFIND** (what real WebDAV clients use).
 - Exclusive and shared locking with `If:` header precondition validation
 - Read-only mode for safe access
 - Upload size limits
@@ -215,10 +216,38 @@ Use your machine's local IP address or hostname.
 
 ### Authentication
 
-All WebDAV requests are authenticated via OpenClaw's gateway authentication. The plugin
-uses `auth: "gateway"` which means:
-- Requests without a valid session token are rejected by OpenClaw before reaching the plugin
-- No additional authentication logic is needed in the plugin
+The WebDAV route uses OpenClaw **`plugin`** HTTP admission (no gateway-layer Bearer check). The
+plugin then requires the **same secret the gateway uses for token or password auth**:
+
+- **HTTP Basic:** use **any username** (it is ignored). Set the **password** to your **gateway
+  token** (token mode) or **gateway password** (password mode).
+- **Bearer:** `Authorization: Bearer <same secret>` still works (e.g. `curl`).
+
+Credential resolution follows OpenClaw’s `resolveGatewayAuth` when the `openclaw` package is
+available at runtime; otherwise plain `gateway.auth` strings plus
+`OPENCLAW_GATEWAY_TOKEN` / `OPENCLAW_GATEWAY_PASSWORD` are used.
+
+If the gateway is **`auth.mode: none`**, WebDAV does not require a password (only use on trusted
+networks). **`trusted-proxy`** mode has no shared secret for WebDAV; the plugin returns **503**
+until you use token/password mode or env-based credentials.
+
+**Examples**
+
+```bash
+openclaw config get gateway.auth.token
+
+# Basic (password = gateway token; username ignored)
+curl -sS -u "any:YOUR_GATEWAY_TOKEN" http://127.0.0.1:28765/webdav/ -X OPTIONS -D -
+
+# Bearer (same secret)
+curl -sS -H "Authorization: Bearer YOUR_TOKEN" http://127.0.0.1:28765/webdav/ -X OPTIONS -D -
+```
+
+**Finder / Cyberduck / davfs2:** connect with **any username** and the **gateway token (or
+password) as the password**.
+
+Startup logs use the **`[plugins]`** subsystem (e.g. `[plugins] [webdav] starting …`) in the same
+terminal as `gateway:watch` / `openclaw gateway`.
 
 ### Path Scoping
 
@@ -267,8 +296,10 @@ HTTP/1.1 413 Request Entity Too Large
 
 ### 401 Unauthorized
 
-- Ensure you're using valid OpenClaw credentials
-- Check that the plugin is configured with `auth: "gateway"` (default)
+- Send **Basic** auth (password = gateway token or password) or **Bearer** with the same secret
+  (see [Authentication](#authentication)).
+- A **401** with a `WWW-Authenticate: Basic` header means the plugin did not accept the credential.
+- Confirm the token: `openclaw config get gateway.auth.token` (or env `OPENCLAW_GATEWAY_TOKEN`).
 
 ### 403 Forbidden
 
@@ -301,7 +332,7 @@ HTTP/1.1 413 Request Entity Too Large
 
 - Verify the URL format: `http://localhost:18789/webdav/`
 - Check that OpenClaw is running and the plugin is enabled
-- Try connecting from Terminal: `curl http://localhost:18789/webdav/`
+- Use **Connect As** with **any username** and **password = gateway token** (or test with `curl -u any:TOKEN …`)
 
 ### davfs2: Files not updating
 
@@ -310,13 +341,14 @@ HTTP/1.1 413 Request Entity Too Large
 
 ### Debug Logging
 
-Enable debug logging by setting the `DEBUG_WEBDAV` environment variable when starting
-OpenClaw:
-```bash
-DEBUG_WEBDAV=1 openclaw start
-```
+Set **`DEBUG_WEBDAV=1`** on the **gateway** process. The plugin logs:
 
-This logs all incoming requests with method, path, and `If:` header to stderr.
+- At startup: a short note about where auth runs
+- **After** WebDAV auth succeeds: one line per request (`METHOD` + path) via **`api.logger.info`**
+  (under the **`[plugins]`** prefix)
+
+Failed **401** responses are decided inside the plugin before the verbose line; fix Basic/Bearer
+credentials first, then look for `[webdav]` request lines.
 
 ---
 

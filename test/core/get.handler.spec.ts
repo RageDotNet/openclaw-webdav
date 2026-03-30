@@ -66,11 +66,21 @@ describe("handleGet", () => {
     expect(res.statusCode).toBe(404);
   });
 
-  it("returns 405 for directory", async () => {
+  it("returns 200 with plain-text directory listing for collection", async () => {
     const adapter = await setupAdapter();
     const req = createMockRequest("GET", "/docs");
     const res = await invokeHandler((r) => handleGet(r, adapter, opts), req);
-    expect(res.statusCode).toBe(405);
+    expect(res.statusCode).toBe(200);
+    expect(String(res.headers["content-type"])).toContain("text/plain");
+    expect(res.body.toString()).toBe("");
+  });
+
+  it("lists sorted entries with trailing slash for subdirs", async () => {
+    const adapter = await setupAdapter();
+    const req = createMockRequest("GET", "/");
+    const res = await invokeHandler((r) => handleGet(r, adapter, opts), req);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.toString()).toBe("docs/\nfile.txt\nimage.png\n");
   });
 
   it("returns 403 for path outside workspace", async () => {
