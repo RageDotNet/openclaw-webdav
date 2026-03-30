@@ -1,3 +1,7 @@
+---
+task: Build a CLI todo app in TypeScript
+test_command: "npm test"
+---
 # TICKLIST — OpenClaw WebDAV Plugin (v2.1)
 
 ## Ralph Instructions
@@ -16,8 +20,6 @@ The full description, acceptance criteria, and notes for each task are in:
 
 Each implementation task is followed by a QA verification task. Complete the QA task before moving to the next implementation task.
 
----
-
 ## Phase 1: Repo Scaffold & Standalone Harness
 
 - [ ] WD-01: Initialize repository and project scaffolding
@@ -35,8 +37,6 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [ ] WD-07: Implement WebDAV error XML helper (`buildErrorXml`)
 - [ ] WD-07-QA: Verify output is valid RFC 4918 §14 XML for all standard error conditions
 
----
-
 ## Phase 2: Read-Only Protocol
 
 - [ ] WD-08: Implement OPTIONS handler (DAV: 1,2, Allow header, MS-Author-Via)
@@ -50,8 +50,6 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [ ] WD-12: Implement PROPFIND Depth:1 and infinity handler (with safety depth limit)
 - [ ] WD-12-QA: Verify Depth:1 children, Depth:infinity recursion, depth limit returns 403 with error XML
 
----
-
 ## Phase 3: Read-Write Protocol
 
 - [ ] WD-13: Implement PUT handler (stream body, 201/204, parent dir creation, 409/403/423)
@@ -64,8 +62,6 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [ ] WD-16-QA: Verify file copy, recursive collection, Overwrite:F conflict 412, cross-server 502
 - [ ] WD-17: Implement MOVE handler (same Destination/Overwrite semantics as COPY)
 - [ ] WD-17-QA: Verify rename, cross-directory move, Overwrite conflict, error codes match RFC 4918
-
----
 
 ## Phase 4: Locking Protocol
 
@@ -82,8 +78,6 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [ ] WD-23: Litmus WebDAV conformance testing (standalone HTTP server wrapper, `npm run test:conformance`)
 - [ ] WD-23-QA: Verify litmus basic + locking tests pass (or failures documented with justification)
 
----
-
 ## Phase 5: OpenClaw Integration
 
 - [ ] WD-24: Implement HTTP adapter layer (`parseOpenClawRequest` / `sendHandlerResult`)
@@ -99,8 +93,6 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [ ] WD-29: Integration buffer — fix core layer issues discovered during OpenClaw integration
 - [ ] WD-29-QA: Verify no regressions in unit tests or litmus conformance after fixes
 
----
-
 ## Phase 6: Hardening & E2E Testing
 
 - [ ] WD-30: Path traversal hardening audit + dedicated test file + WARN logging
@@ -110,15 +102,11 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 - [ ] WD-32: E2E testing with real WebDAV clients (Cyberduck, macOS Finder, Windows Explorer, davfs2)
 - [ ] WD-32-QA: Verify all clients perform basic CRUD; Windows LOCK/UNLOCK flow verified; COMPATIBILITY.md written
 
----
-
 ## Phase 7: Docs & Community Release
 
 - [ ] WD-33: Write README and per-client setup guides (7 clients + security + troubleshooting)
 - [ ] WD-33-QA: Verify all sections present, client guides accurate, renders correctly on GitHub
 - [ ] WD-34: Write CHANGELOG, LICENSE, CONTRIBUTING, and package for clawhub
 - [ ] WD-34-QA: Verify CHANGELOG format, MIT license present, CONTRIBUTING notes standalone test execution, package.json correct, submitted to clawhub.ai
-
----
 
 _68 items total (34 tasks + 34 QA checks). Full task specs in `webdav-plugin-plan-v2-final.md`._
