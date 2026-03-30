@@ -22,20 +22,20 @@ Each implementation task is followed by a QA verification task. Complete the QA 
 
 ## Phase 1: Repo Scaffold & Standalone Harness
 
-- [ ] WD-01: Initialize repository and project scaffolding
-- [ ] WD-01-QA: Verify repo structure, `npm run build` and `npm test` pass, CI config present
-- [ ] WD-02: Define core layer TypeScript interfaces (ParsedRequest, HandlerResult, StorageAdapter, LockManager, ValidationResult)
-- [ ] WD-02-QA: Verify all interfaces exported from `src/types.ts`, no runtime code, compiles cleanly
-- [ ] WD-03: Create mock OpenClaw API factory (`test/helpers/mockApi.ts`)
-- [ ] WD-03-QA: Verify `createMockApi()` works with overrides, importable with no OpenClaw installed
-- [ ] WD-04: Implement HTTP test harness (`test/helpers/httpHarness.ts`)
-- [ ] WD-04-QA: Verify harness can invoke a handler and capture status/headers/body; self-test passes
-- [ ] WD-05: Implement path validation — `validatePath()` with traversal/encoding/Windows name protections
-- [ ] WD-05-QA: Verify unit tests pass for `../`, double-encode, null byte, Windows reserved names, Unicode NFC/NFD, valid paths
-- [ ] WD-06: Implement `NodeFsStorageAdapter` + `MemoryStorageAdapter` + shared compliance test suite
-- [ ] WD-06-QA: Verify both adapters pass compliance suite; `MemoryStorageAdapter` usable in handler tests
-- [ ] WD-07: Implement WebDAV error XML helper (`buildErrorXml`)
-- [ ] WD-07-QA: Verify output is valid RFC 4918 §14 XML for all standard error conditions
+- [x] WD-01: Initialize repository and project scaffolding
+- [x] WD-01-QA: Verify repo structure, `npm run build` and `npm test` pass, CI config present
+- [x] WD-02: Define core layer TypeScript interfaces (ParsedRequest, HandlerResult, StorageAdapter, LockManager, ValidationResult)
+- [x] WD-02-QA: Verify all interfaces exported from `src/types.ts`, no runtime code, compiles cleanly
+- [x] WD-03: Create mock OpenClaw API factory (`test/helpers/mockApi.ts`)
+- [x] WD-03-QA: Verify `createMockApi()` works with overrides, importable with no OpenClaw installed
+- [x] WD-04: Implement HTTP test harness (`test/helpers/httpHarness.ts`)
+- [x] WD-04-QA: Verify harness can invoke a handler and capture status/headers/body; self-test passes
+- [x] WD-05: Implement path validation — `validatePath()` with traversal/encoding/Windows name protections
+- [x] WD-05-QA: Verify unit tests pass for `../`, double-encode, null byte, Windows reserved names, Unicode NFC/NFD, valid paths
+- [x] WD-06: Implement `NodeFsStorageAdapter` + `MemoryStorageAdapter` + shared compliance test suite
+- [x] WD-06-QA: Verify both adapters pass compliance suite; `MemoryStorageAdapter` usable in handler tests
+- [x] WD-07: Implement WebDAV error XML helper (`buildErrorXml`)
+- [x] WD-07-QA: Verify output is valid RFC 4918 §14 XML for all standard error conditions
 
 ## Phase 2: Read-Only Protocol
 
