@@ -561,6 +561,9 @@ run_iteration() {
         signal="DEFER"
         # Stop the agent, will retry with backoff
         kill $agent_pid 2>/dev/null || true
+	;;
+      "*")
+        echo L:$line
         ;;
     esac
   done < "$fifo"
