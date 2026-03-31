@@ -12,6 +12,11 @@ export interface RateLimitConfig {
 export interface WebDavConfig {
   /** Root path for WebDAV storage. Defaults to workspaceDir. */
   rootPath: string;
+  /**
+   * HTTP path prefix on the gateway (e.g. `/webdav`). Change this if another
+   * extension already owns `/webdav` with different auth semantics.
+   */
+  httpMountPath: string;
   /** If true, all write operations return 405. Default: false. */
   readOnly: boolean;
   /** Maximum upload size in megabytes. Default: 100. */
@@ -21,6 +26,7 @@ export interface WebDavConfig {
 }
 
 const DEFAULTS: Omit<WebDavConfig, "rootPath"> = {
+  httpMountPath: "/webdav",
   readOnly: false,
   maxUploadSizeMb: 100,
   rateLimitPerIp: {
@@ -42,11 +48,36 @@ export function parsePluginConfig(
   workspaceDir: string,
 ): WebDavConfig {
   const rootPath = parseRootPath(pluginConfig, workspaceDir);
+  const httpMountPath = parseHttpMountPath(pluginConfig);
   const readOnly = parseReadOnly(pluginConfig);
   const maxUploadSizeMb = parseMaxUploadSizeMb(pluginConfig);
   const rateLimitPerIp = parseRateLimitPerIp(pluginConfig);
 
-  return { rootPath, readOnly, maxUploadSizeMb, rateLimitPerIp };
+  return { rootPath, httpMountPath, readOnly, maxUploadSizeMb, rateLimitPerIp };
+}
+
+function parseHttpMountPath(config: Record<string, unknown>): string {
+  const val = config["httpMountPath"];
+  if (val === undefined || val === null || val === "") {
+    return DEFAULTS.httpMountPath;
+  }
+  if (typeof val !== "string") {
+    throw new Error(`WebDAV config error: httpMountPath must be a string, got ${typeof val}`);
+  }
+  let p = val.trim();
+  if (p === "") {
+    return DEFAULTS.httpMountPath;
+  }
+  if (!p.startsWith("/")) {
+    p = `/${p}`;
+  }
+  while (p.length > 1 && p.endsWith("/")) {
+    p = p.slice(0, -1);
+  }
+  if (p === "/") {
+    throw new Error("WebDAV config error: httpMountPath cannot be '/'");
+  }
+  return p;
 }
 
 function parseRootPath(config: Record<string, unknown>, workspaceDir: string): string {

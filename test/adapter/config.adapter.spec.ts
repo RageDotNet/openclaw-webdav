@@ -28,6 +28,11 @@ describe("parsePluginConfig", () => {
         windowSeconds: 10,
       });
     });
+
+    it("defaults httpMountPath to /webdav", () => {
+      const config = parsePluginConfig({}, WORKSPACE);
+      expect(config.httpMountPath).toBe("/webdav");
+    });
   });
 
   describe("valid values", () => {
@@ -52,6 +57,15 @@ describe("parsePluginConfig", () => {
         WORKSPACE,
       );
       expect(config.rateLimitPerIp).toEqual({ enabled: false, max: 50, windowSeconds: 30 });
+    });
+
+    it("accepts custom httpMountPath and normalizes leading slash", () => {
+      expect(parsePluginConfig({ httpMountPath: "plugin/wd" }, WORKSPACE).httpMountPath).toBe(
+        "/plugin/wd",
+      );
+      expect(parsePluginConfig({ httpMountPath: "/openclaw-webdav/" }, WORKSPACE).httpMountPath).toBe(
+        "/openclaw-webdav",
+      );
     });
 
     it("accepts rateLimitPerIp with only enabled field", () => {
@@ -126,6 +140,18 @@ describe("parsePluginConfig", () => {
       expect(() =>
         parsePluginConfig({ rateLimitPerIp: { windowSeconds: 0 } }, WORKSPACE),
       ).toThrow(/rateLimitPerIp.windowSeconds must be positive/);
+    });
+
+    it("throws for httpMountPath /", () => {
+      expect(() => parsePluginConfig({ httpMountPath: "/" }, WORKSPACE)).toThrow(
+        /httpMountPath cannot be/,
+      );
+    });
+
+    it("throws for non-string httpMountPath", () => {
+      expect(() => parsePluginConfig({ httpMountPath: 99 }, WORKSPACE)).toThrow(
+        /httpMountPath must be a string/,
+      );
     });
   });
 });

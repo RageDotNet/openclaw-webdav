@@ -38,6 +38,7 @@ export interface PluginApi {
     path: string;
     auth: string;
     match?: string;
+    replaceExisting?: boolean;
     handler: (req: unknown, res: unknown) => Promise<void>;
   }): void;
   logger: {
@@ -47,6 +48,19 @@ export interface PluginApi {
 }
 
 const WRITE_METHODS = new Set(["PUT", "DELETE", "MKCOL", "COPY", "MOVE", "LOCK", "UNLOCK", "PROPPATCH"]);
+
+/** Strip gateway mount prefix so handlers see workspace-relative paths. */
+export function stripHttpMountPath(pathname: string, mount: string): string {
+  const base = mount.length > 1 && mount.endsWith("/") ? mount.slice(0, -1) : mount;
+  if (pathname === base) {
+    return "/";
+  }
+  if (pathname.startsWith(`${base}/`)) {
+    const rest = pathname.slice(base.length);
+    return rest.length > 0 ? rest : "/";
+  }
+  return pathname;
+}
 
 const METHOD_NOT_ALLOWED: HandlerResult = {
   status: 405,
@@ -75,20 +89,22 @@ export function registerWebDavRoutes(
   lockManager: LockManager,
   routeContext: WebDavRouteContext,
 ): void {
+  const mount = config.httpMountPath;
   const handlerOpts = {
     workspaceDir: config.rootPath,
     serverHost: undefined as string | undefined,
     lockManager,
-    routePrefix: "/webdav",
+    routePrefix: mount,
   };
 
   const maxUploadBytes = config.maxUploadSizeMb * 1024 * 1024;
   const rateLimiter = new SlidingWindowRateLimiter(config.rateLimitPerIp);
 
   api.registerHttpRoute({
-    path: "/webdav",
+    path: mount,
     auth: "plugin",
     match: "prefix",
+    replaceExisting: true,
     handler: async (req: unknown, res: unknown): Promise<void> => {
       const typedReq = req as OpenClawRequest;
       const typedRes = res as OpenClawResponse;
@@ -120,8 +136,7 @@ export function registerWebDavRoutes(
         }
 
         const rawReq = await parseOpenClawRequest(typedReq);
-        // Strip the /webdav prefix so handlers see paths relative to the root
-        const strippedPath = rawReq.path.replace(/^\/webdav/, "") || "/";
+        const strippedPath = stripHttpMountPath(rawReq.path, mount);
         const parsedReq = { ...rawReq, path: strippedPath };
         const method = parsedReq.method;
 

@@ -32,6 +32,7 @@ export default {
       path: string;
       auth: string;
       match?: string;
+      replaceExisting?: boolean;
       handler: (req: unknown, res: unknown) => Promise<void>;
     }): void;
   }): void {
@@ -55,6 +56,9 @@ export default {
       loadOpenClawConfig: () => api.runtime.config.loadConfig(),
     });
 
-    api.logger.info("[webdav] registered /webdav (plugin HTTP route; auth validated inside WebDAV)");
+    api.logger.info(
+      `[webdav] registered ${config.httpMountPath} (plugin HTTP route; Basic password or Bearer = gateway secret). ` +
+        "If curl -u returns JSON 401, another route may still own this path as gateway auth — set plugins.entries.openclaw-webdav.config.httpMountPath to a free prefix and restart.",
+    );
   },
 };

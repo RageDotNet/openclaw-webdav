@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Readable } from "node:stream";
-import { registerWebDavRoutes } from "../../src/adapter/routes.js";
+import { registerWebDavRoutes, stripHttpMountPath } from "../../src/adapter/routes.js";
 import type { PluginApi, WebDavRouteContext } from "../../src/adapter/routes.js";
 import type { WebDavConfig } from "../../src/adapter/config.js";
 import { MemoryStorageAdapter } from "../../src/core/storage/memoryAdapter.js";
@@ -129,12 +129,23 @@ function basicAuth(password: string, username = "any-user"): Record<string, stri
 
 const DEFAULT_CONFIG: WebDavConfig = {
   rootPath: "/workspace",
+  httpMountPath: "/webdav",
   readOnly: false,
   maxUploadSizeMb: 100,
   rateLimitPerIp: { enabled: true, max: 100, windowSeconds: 10 },
 };
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+describe("stripHttpMountPath", () => {
+  it("maps mount root to /", () => {
+    expect(stripHttpMountPath("/webdav", "/webdav")).toBe("/");
+  });
+
+  it("strips prefix leaving workspace-relative path", () => {
+    expect(stripHttpMountPath("/webdav/openclaw.json", "/webdav")).toBe("/openclaw.json");
+  });
+});
 
 describe("registerWebDavRoutes", () => {
   let storage: MemoryStorageAdapter;
@@ -147,7 +158,7 @@ describe("registerWebDavRoutes", () => {
     await storage.mkdir("/workspace");
   });
 
-  it("calls api.registerHttpRoute with /webdav path, prefix match, and plugin HTTP auth", () => {
+  it("calls api.registerHttpRoute with /webdav path, prefix match, plugin HTTP auth, replaceExisting", () => {
     const { api } = createMockApi();
     registerWebDavRoutes(api, DEFAULT_CONFIG, storage, lockManager, testRouteContext());
 
@@ -156,7 +167,25 @@ describe("registerWebDavRoutes", () => {
     expect(call.path).toBe("/webdav");
     expect(call.match).toBe("prefix");
     expect(call.auth).toBe("plugin");
+    expect(call.replaceExisting).toBe(true);
     expect(typeof call.handler).toBe("function");
+  });
+
+  it("uses custom httpMountPath for registration and path stripping", async () => {
+    await storage.writeFile("/workspace/custom.txt", Buffer.from("c"));
+
+    const { api, getHandler } = createMockApi();
+    const cfg = { ...DEFAULT_CONFIG, httpMountPath: "/plugin/wd" };
+    registerWebDavRoutes(api, cfg, storage, lockManager, testRouteContext());
+
+    const reg = (api.registerHttpRoute as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(reg.path).toBe("/plugin/wd");
+
+    const req = createMockReq("GET", "/plugin/wd/custom.txt", basicAuth(TEST_GATEWAY_TOKEN));
+    const res = createMockRes();
+    await getHandler()(req, res);
+
+    expect(res.statusCode).toBe(200);
   });
 
   it("returns 401 without credentials when gateway uses a shared secret", async () => {

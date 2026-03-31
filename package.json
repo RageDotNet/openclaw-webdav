@@ -1,6 +1,6 @@
 {
   "name": "openclaw-webdav",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenClaw WebDAV community plugin",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -45,7 +45,7 @@
     "xmlbuilder2": "^4.0.3"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.3.30"
+    "openclaw": ">=2026.3.28"
   },
   "peerDependenciesMeta": {
     "openclaw": {
