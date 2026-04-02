@@ -4,6 +4,7 @@ dist/
 .env.*
 *.log
 
-# Ralph config (may contain API key)
-.cursor/ralph-config.json
-.ralph
+# Cursor / Ralph (local tooling; not part of the published package)
+.cursor/
+.ralph/
+RALPH*
