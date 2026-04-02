@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-04-02
+
+### Changed
+
+- Refactor only (no protocol changes): shared helpers `formatWebDavEtag`, `removeRecursive`, and `parseWebDavDestination` for COPY/MOVE, PROPFIND, preconditions, and GET headers.
+- `openclaw.plugin.json` version aligned with the npm package.
+- ESLint uses `tsconfig.eslint.json` (covers `src` and `test`) and ignores `dist/`.
+- Declared **Node.js ≥ 22** in `package.json` `engines` (matches OpenClaw).
+
+### Fixed
+
+- GitHub Actions: run CI on Node 22 only; Vitest resolves `openclaw/plugin-sdk/browser-support` via the package `exports` subpath (no `.js` suffix).
+- Route adapter tests: mock request emits body/`end` after stream listeners are registered so handlers are not blocked by a slow OpenClaw dynamic import.
+
+### Removed
+
+- Unused code and types (e.g. `DEPTH_LIMIT_SENTINEL`, unused `ParsedLockInfo` fields, placeholder test file).
+
+## [0.1.1] - 2026-03-30
+
+### Added
+
+- Gateway-aligned HTTP auth for WebDAV: **Basic** (password = gateway token or password; username ignored) and **Bearer**; resolves auth via OpenClaw when available with env/config fallback.
+- **GET on collections** returns a UTF-8 plain-text directory listing (one name per line; directories end with `/`).
+- Configurable **`httpMountPath`** for the plugin HTTP route; registration uses **`replaceExisting`** so the plugin can take over its prefix.
+
+### Fixed
+
+- Plugin load, route registration, and install scan behavior with OpenClaw.
+
 ## [0.1.0] - 2026-03-29
 
 ### Added
@@ -39,4 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.1.2]: https://github.com/openclaw-community/openclaw-webdav/releases/tag/v0.1.2
+[0.1.1]: https://github.com/openclaw-community/openclaw-webdav/releases/tag/v0.1.1
 [0.1.0]: https://github.com/openclaw-community/openclaw-webdav/releases/tag/v0.1.0
