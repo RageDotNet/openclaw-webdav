@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Readable } from "node:stream";
 import { registerWebDavRoutes, stripHttpMountPath } from "../../src/adapter/routes.js";
 import type { PluginApi, WebDavRouteContext } from "../../src/adapter/routes.js";
 import type { WebDavConfig } from "../../src/adapter/config.js";

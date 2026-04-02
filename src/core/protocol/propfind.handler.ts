@@ -4,6 +4,7 @@ import { create } from "xmlbuilder2";
 import type { HandlerResult, ParsedRequest, StatResult, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
+import { formatWebDavEtag } from "../util/webDavEtag.js";
 import { buildErrorXml } from "../util/errorXml.js";
 
 export interface PropfindHandlerOptions {
@@ -27,12 +28,6 @@ function buildHrefForResource(filePath: string, workspaceDir: string, isDir: boo
   if (rel === "" || rel === ".") return "/";
   return "/" + rel + (isDir ? "/" : "");
 }
-
-function buildEtag(stat: StatResult): string {
-  return `"${stat.mtime.getTime().toString(16)}-${stat.size.toString(16)}"`;
-}
-
-const DEPTH_LIMIT_SENTINEL = "__DEPTH_LIMIT__";
 
 export async function handlePropfind(
   req: ParsedRequest,
@@ -145,7 +140,7 @@ export async function handlePropfind(
       prop.ele("D:getcontenttype").txt("application/octet-stream");
     }
 
-    prop.ele("D:getetag").txt(buildEtag(resource.stat));
+    prop.ele("D:getetag").txt(formatWebDavEtag(resource.stat.mtime, resource.stat.size));
     prop.ele("D:getlastmodified").txt(resource.stat.mtime.toUTCString());
 
     const resourcetype = prop.ele("D:resourcetype");

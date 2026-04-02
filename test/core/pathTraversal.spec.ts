@@ -50,10 +50,9 @@ describe("URL-encoded traversal attacks", () => {
   });
 
   it("rejects %2e%2e/ (encoded dots with literal slash)", () => {
-    const result = validatePath("/%2e%2e/etc/passwd", WORKSPACE);
     // %2e%2e decodes to .. — traversal check catches it
-    const r = validatePath("/%2e%2e/etc/passwd", WORKSPACE);
-    expect(r.valid).toBe(false);
+    const result = validatePath("/%2e%2e/etc/passwd", WORKSPACE);
+    expect(result.valid).toBe(false);
   });
 
   it("rejects %2F encoded slash", () => {

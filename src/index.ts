@@ -9,8 +9,6 @@ import { registerWebDavRoutes } from "./adapter/routes.js";
 import { NodeFsStorageAdapter } from "./core/storage/nodeFsAdapter.js";
 import { InMemoryLockManager } from "./core/locks/lockManager.js";
 
-let lockManager: InMemoryLockManager | undefined;
-
 export default {
   id: "openclaw-webdav",
   name: "WebDAV",
@@ -50,7 +48,7 @@ export default {
     }
 
     const storage = new NodeFsStorageAdapter();
-    lockManager = new InMemoryLockManager();
+    const lockManager = new InMemoryLockManager();
 
     registerWebDavRoutes(api, config, storage, lockManager, {
       loadOpenClawConfig: () => api.runtime.config.loadConfig(),

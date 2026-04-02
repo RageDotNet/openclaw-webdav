@@ -1,7 +1,6 @@
 import * as fsp from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { Readable } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { NodeFsStorageAdapter } from "../../src/core/storage/nodeFsAdapter.js";
 import { MemoryStorageAdapter } from "../../src/core/storage/memoryAdapter.js";

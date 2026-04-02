@@ -1,9 +1,10 @@
-import * as path from "node:path";
-import type { HandlerResult, LockManager, ParsedRequest, StorageAdapter, StatResult } from "../../types.js";
+import type { HandlerResult, LockManager, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
+import { removeRecursive } from "../storage/removeRecursive.js";
 import { PreconditionError, checkPreconditions } from "./preconditions.js";
 import { validatePath } from "../storage/pathValidation.js";
 import { buildErrorXml } from "../util/errorXml.js";
+import { parseWebDavDestination } from "./webDavDestination.js";
 
 export interface CopyHandlerOptions {
   workspaceDir: string;
@@ -12,37 +13,6 @@ export interface CopyHandlerOptions {
   lockManager?: LockManager;
   /** URL path prefix to strip from Destination header paths (e.g. "/webdav") */
   routePrefix?: string;
-}
-
-function parseDestination(
-  destinationHeader: string,
-  serverHost: string | undefined,
-  workspaceDir: string,
-  routePrefix?: string,
-): { valid: false; status: number; body: string } | { valid: true; destPath: string; existed: boolean } {
-  let destUrl: URL;
-  try {
-    destUrl = new URL(destinationHeader);
-  } catch {
-    return { valid: false, status: 400, body: buildErrorXml("no-conflicting-lock") };
-  }
-
-  // Cross-server check
-  if (serverHost && destUrl.host !== serverHost) {
-    return { valid: false, status: 502, body: buildErrorXml("no-conflicting-lock") };
-  }
-
-  let destPathRaw = decodeURIComponent(destUrl.pathname);
-  // Strip route prefix if present
-  if (routePrefix && destPathRaw.startsWith(routePrefix)) {
-    destPathRaw = destPathRaw.slice(routePrefix.length) || "/";
-  }
-  const validation = validatePath(destPathRaw, workspaceDir);
-  if (!validation.valid) {
-    return { valid: false, status: validation.errorCode, body: buildErrorXml("no-conflicting-lock") };
-  }
-
-  return { valid: true, destPath: validation.normalizedPath, existed: false };
 }
 
 export async function handleCopy(
@@ -70,8 +40,12 @@ export async function handleCopy(
 
   const srcPath = srcValidation.normalizedPath;
 
-  // Parse destination
-  const destResult = parseDestination(destinationHeader, opts.serverHost, opts.workspaceDir, opts.routePrefix);
+  const destResult = parseWebDavDestination(
+    destinationHeader,
+    opts.serverHost,
+    opts.workspaceDir,
+    opts.routePrefix,
+  );
   if (!destResult.valid) {
     return {
       status: destResult.status,
@@ -129,24 +103,4 @@ export async function handleCopy(
     headers: {},
     body: undefined,
   };
-}
-
-async function removeRecursive(filePath: string, storage: StorageAdapter): Promise<void> {
-  let stat: StatResult;
-  try {
-    stat = await storage.stat(filePath);
-  } catch {
-    return;
-  }
-
-  if (stat.isFile) {
-    await storage.unlink(filePath);
-    return;
-  }
-
-  const children = await storage.readdir(filePath);
-  for (const child of children) {
-    await removeRecursive(path.join(filePath, child), storage);
-  }
-  await storage.rmdir(filePath);
 }

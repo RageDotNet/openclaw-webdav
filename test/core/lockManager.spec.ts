@@ -88,7 +88,7 @@ describe("InMemoryLockManager", () => {
 
   it("expired lock is not returned by getLocks", async () => {
     vi.useFakeTimers();
-    const lock = await manager.lock("/file.txt", "<owner/>", "exclusive", "0", 1); // 1 second
+    await manager.lock("/file.txt", "<owner/>", "exclusive", "0", 1); // 1 second
     expect(await manager.isLocked("/file.txt")).toBe(true);
 
     vi.advanceTimersByTime(2000); // advance 2 seconds

@@ -1,5 +1,6 @@
 import type { LockManager, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
+import { formatWebDavEtag } from "../util/webDavEtag.js";
 
 /**
  * Typed error thrown when an If: header precondition fails.
@@ -153,11 +154,6 @@ function parseConditions(content: string): IfCondition[] {
   return conditions;
 }
 
-/** Compute ETag for a resource (same formula as get.handler.ts) */
-function computeEtag(mtime: Date, size: number): string {
-  return `"${mtime.getTime().toString(16)}-${size.toString(16)}"`;
-}
-
 /**
  * Evaluate a single If: list against the resource state.
  * Returns an object: { passed, hasLockToken } where:
@@ -178,7 +174,7 @@ async function evaluateList(
   if (storage && list.conditions.some((c) => c.etag !== undefined)) {
     try {
       const stat = await storage.stat(normalizedPath);
-      resourceEtag = computeEtag(stat.mtime, stat.size);
+      resourceEtag = formatWebDavEtag(stat.mtime, stat.size);
     } catch (err) {
       if (err instanceof StorageError && err.code === "ENOENT") {
         resourceEtag = undefined;

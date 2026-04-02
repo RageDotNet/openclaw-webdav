@@ -3,6 +3,7 @@ import mime from "mime-types";
 import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
+import { formatWebDavEtag } from "../util/webDavEtag.js";
 import { buildErrorXml } from "../util/errorXml.js";
 
 export interface GetHandlerOptions {
@@ -10,12 +11,9 @@ export interface GetHandlerOptions {
 }
 
 /**
- * Build the shared response headers for a file resource.
- * Used by both GET and HEAD handlers.
- */
-/**
  * UTF-8 plain-text listing for GET on a collection: one entry per line;
- * subdirectories end with `/`. Sorted by locale.
+ * subdirectories end with `/`. Sorted by locale. File responses use
+ * {@link buildFileHeaders} for shared GET/HEAD headers (Content-Type, ETag, etc.).
  */
 export async function buildDirectoryListingPlainText(
   storage: StorageAdapter,
@@ -41,15 +39,15 @@ export async function buildFileHeaders(
   filePath: string,
   storage: StorageAdapter,
 ): Promise<Record<string, string | number>> {
-  const stat = await storage.stat(filePath);
+  const resourceStat = await storage.stat(filePath);
   const ext = path.extname(filePath);
   const contentType = (ext && mime.lookup(ext)) || "application/octet-stream";
-  const etag = `"${stat.mtime.getTime().toString(16)}-${stat.size.toString(16)}"`;
+  const etag = formatWebDavEtag(resourceStat.mtime, resourceStat.size);
 
   return {
     "Content-Type": contentType,
-    "Content-Length": stat.size,
-    "Last-Modified": stat.mtime.toUTCString(),
+    "Content-Length": resourceStat.size,
+    "Last-Modified": resourceStat.mtime.toUTCString(),
     ETag: etag,
   };
 }
@@ -70,9 +68,9 @@ export async function handleGet(
 
   const { normalizedPath } = validation;
 
-  let stat;
+  let resourceStat;
   try {
-    stat = await storage.stat(normalizedPath);
+    resourceStat = await storage.stat(normalizedPath);
   } catch (err) {
     if (err instanceof StorageError && err.code === "ENOENT") {
       return { status: 404, headers: {}, body: undefined };
@@ -80,14 +78,14 @@ export async function handleGet(
     throw err;
   }
 
-  if (stat.isDirectory) {
+  if (resourceStat.isDirectory) {
     const { text, byteLength } = await buildDirectoryListingPlainText(storage, normalizedPath);
     return {
       status: 200,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Content-Length": byteLength,
-        "Last-Modified": stat.mtime.toUTCString(),
+        "Last-Modified": resourceStat.mtime.toUTCString(),
       },
       body: text,
     };

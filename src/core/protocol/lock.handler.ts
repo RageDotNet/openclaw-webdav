@@ -13,9 +13,7 @@ const DAV_NS = "DAV:";
 
 interface ParsedLockInfo {
   scope: "exclusive" | "shared";
-  depth: "0" | "infinity";
   owner: string;
-  timeoutSeconds: number;
 }
 
 function parseTimeoutHeader(header: string | undefined): number {
@@ -62,7 +60,7 @@ function parseLockInfo(body: Buffer): ParsedLockInfo | null {
   const ownerEl = lockinfo.getElementsByTagNameNS(DAV_NS, "owner")[0];
   const owner = ownerEl ? ownerEl.toString() : "<D:owner/>";
 
-  return { scope, depth: "0", owner, timeoutSeconds: 3600 };
+  return { scope, owner };
 }
 
 function buildLockDiscoveryXml(lock: ILock): string {

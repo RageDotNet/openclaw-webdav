@@ -19,9 +19,9 @@ export async function handleHead(
 
   const { normalizedPath } = validation;
 
-  let stat;
+  let resourceStat;
   try {
-    stat = await storage.stat(normalizedPath);
+    resourceStat = await storage.stat(normalizedPath);
   } catch (err) {
     if (err instanceof StorageError && err.code === "ENOENT") {
       return { status: 404, headers: {}, body: undefined };
@@ -29,14 +29,14 @@ export async function handleHead(
     throw err;
   }
 
-  if (stat.isDirectory) {
+  if (resourceStat.isDirectory) {
     const { byteLength } = await buildDirectoryListingPlainText(storage, normalizedPath);
     return {
       status: 200,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Content-Length": byteLength,
-        "Last-Modified": stat.mtime.toUTCString(),
+        "Last-Modified": resourceStat.mtime.toUTCString(),
       },
       body: undefined,
     };
