@@ -32,7 +32,7 @@ Mount your OpenClaw workspace as a WebDAV drive. Access your files from any WebD
 ### Manual Installation
 
 ```bash
-git clone https://github.com/openclaw-community/openclaw-webdav
+git clone https://github.com/RageDotNet/openclaw-webdav
 cd openclaw-webdav
 pnpm install
 pnpm run build

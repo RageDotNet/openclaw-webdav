@@ -1,7 +1,7 @@
 {
   "name": "openclaw-webdav",
   "version": "0.1.2",
-  "description": "OpenClaw WebDAV community plugin",
+  "description": "WebDAV plugin for OpenClaw",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -26,6 +26,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RageDotNet/openclaw-webdav.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RageDotNet/openclaw-webdav/issues"
+  },
+  "homepage": "https://github.com/RageDotNet/openclaw-webdav#readme",
   "packageManager": "pnpm@10.32.0",
   "devDependencies": {
     "@types/mime-types": "^3.0.1",
