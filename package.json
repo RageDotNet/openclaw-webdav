@@ -9,7 +9,7 @@
     "extensions": ["./dist/index.js"]
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",

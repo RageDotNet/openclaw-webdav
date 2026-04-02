@@ -1,4 +1,4 @@
-declare module "openclaw/plugin-sdk/browser-support.js" {
+declare module "openclaw/plugin-sdk/browser-support" {
   export type GatewayAuthConfig = Record<string, unknown>;
 
   export function resolveGatewayAuth(params: {

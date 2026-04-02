@@ -123,7 +123,7 @@ function mapResolvedToExpectation(auth: {
 
 export async function loadWebDavAuthExpectation(openClawConfig: unknown): Promise<WebDavAuthExpectation> {
   try {
-    const mod = await import("openclaw/plugin-sdk/browser-support.js");
+    const mod = await import("openclaw/plugin-sdk/browser-support");
     const authConfig = extractGatewayAuthConfig(openClawConfig);
     const resolved = mod.resolveGatewayAuth({
       authConfig,

@@ -59,6 +59,7 @@ function createMockReq(
         : body;
 
   const listeners: Record<string, Array<(...args: unknown[]) => void>> = {};
+  let bodyEmitted = false;
   const req: MockReq = {
     method,
     url,
@@ -66,14 +67,18 @@ function createMockReq(
     on(event, listener) {
       listeners[event] = listeners[event] ?? [];
       listeners[event].push(listener);
+      // Defer until after readBody() registers both listeners — the handler may await
+      // work (e.g. dynamic import) before calling readBody, so setImmediate at creation
+      // can miss the "end" event.
+      queueMicrotask(() => {
+        if (bodyEmitted || !listeners["end"]?.length) return;
+        bodyEmitted = true;
+        if (bodyBuf.length > 0) listeners["data"]?.forEach((l) => l(bodyBuf));
+        listeners["end"]!.forEach((l) => l());
+      });
       return req;
     },
   };
-
-  setImmediate(() => {
-    if (bodyBuf.length > 0) listeners["data"]?.forEach((l) => l(bodyBuf));
-    listeners["end"]?.forEach((l) => l());
-  });
 
   return req;
 }
