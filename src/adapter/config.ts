@@ -23,18 +23,29 @@ export interface WebDavConfig {
   maxUploadSizeMb: number;
   /** Per-IP rate limiting configuration. */
   rateLimitPerIp: RateLimitConfig;
+  /**
+   * When true, log one `info` line per WebDAV request (method + path) after auth.
+   * Same effect as `DEBUG_WEBDAV=1` on the gateway; either enables logging.
+   */
+  logging: boolean;
 }
 
 const DEFAULTS: Omit<WebDavConfig, "rootPath"> = {
   httpMountPath: "/webdav",
   readOnly: false,
   maxUploadSizeMb: 100,
+  logging: false,
   rateLimitPerIp: {
     enabled: true,
     max: 100,
     windowSeconds: 10,
   },
 };
+
+/** Per-request WebDAV logging: plugin `logging: true` and/or `DEBUG_WEBDAV` on the gateway. */
+export function webDavRequestLoggingEnabled(loggingConfig: boolean): boolean {
+  return loggingConfig || Boolean(process.env.DEBUG_WEBDAV);
+}
 
 /**
  * Parse and validate plugin configuration into a typed WebDavConfig.
@@ -51,9 +62,10 @@ export function parsePluginConfig(
   const httpMountPath = parseHttpMountPath(pluginConfig);
   const readOnly = parseReadOnly(pluginConfig);
   const maxUploadSizeMb = parseMaxUploadSizeMb(pluginConfig);
+  const logging = parseLogging(pluginConfig);
   const rateLimitPerIp = parseRateLimitPerIp(pluginConfig);
 
-  return { rootPath, httpMountPath, readOnly, maxUploadSizeMb, rateLimitPerIp };
+  return { rootPath, httpMountPath, readOnly, maxUploadSizeMb, logging, rateLimitPerIp };
 }
 
 function parseHttpMountPath(config: Record<string, unknown>): string {
@@ -101,6 +113,17 @@ function parseReadOnly(config: Record<string, unknown>): boolean {
   }
   if (typeof val !== "boolean") {
     throw new Error(`WebDAV config error: readOnly must be a boolean, got ${typeof val}`);
+  }
+  return val;
+}
+
+function parseLogging(config: Record<string, unknown>): boolean {
+  const val = config["logging"];
+  if (val === undefined || val === null) {
+    return DEFAULTS.logging;
+  }
+  if (typeof val !== "boolean") {
+    throw new Error(`WebDAV config error: logging must be a boolean, got ${typeof val}`);
   }
   return val;
 }

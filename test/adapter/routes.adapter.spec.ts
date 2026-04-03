@@ -136,6 +136,7 @@ const DEFAULT_CONFIG: WebDavConfig = {
   httpMountPath: "/webdav",
   readOnly: false,
   maxUploadSizeMb: 100,
+  logging: false,
   rateLimitPerIp: { enabled: true, max: 100, windowSeconds: 10 },
 };
 
@@ -218,6 +219,21 @@ describe("registerWebDavRoutes", () => {
     await getHandler()(req, res);
 
     expect(res.statusCode).toBe(200);
+  });
+
+  it("logs one info line per request when config.logging is true", async () => {
+    await storage.writeFile("/workspace/secret.txt", Buffer.from("x"));
+
+    const { api, getHandler } = createMockApi();
+    const cfg = { ...DEFAULT_CONFIG, logging: true };
+    registerWebDavRoutes(api, cfg, storage, lockManager, testRouteContext());
+
+    const req = createMockReq("GET", "/webdav/secret.txt", basicAuth(TEST_GATEWAY_TOKEN));
+    const res = createMockRes();
+    await getHandler()(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(api.logger.info).toHaveBeenCalledWith("[webdav] GET /webdav/secret.txt");
   });
 
   it("accepts Bearer with gateway token", async () => {

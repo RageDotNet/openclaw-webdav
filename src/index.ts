@@ -4,7 +4,7 @@
  * Wires together the config adapter, storage adapter, lock manager,
  * and route registration adapter into a complete OpenClaw plugin.
  */
-import { parsePluginConfig } from "./adapter/config.js";
+import { parsePluginConfig, webDavRequestLoggingEnabled } from "./adapter/config.js";
 import { registerWebDavRoutes } from "./adapter/routes.js";
 import { NodeFsStorageAdapter } from "./core/storage/nodeFsAdapter.js";
 import { InMemoryLockManager } from "./core/locks/lockManager.js";
@@ -41,9 +41,9 @@ export default {
       `[webdav] starting — root: ${config.rootPath}, readOnly: ${config.readOnly} (HTTP Basic/Bearer = gateway token or password)`,
     );
 
-    if (process.env.DEBUG_WEBDAV) {
+    if (webDavRequestLoggingEnabled(config.logging)) {
       api.logger.info(
-        "[webdav] DEBUG_WEBDAV=1: per-request logs after WebDAV auth (Basic password or Bearer = gateway secret).",
+        "[webdav] Request logging on: set `logging: true` in plugin config and/or DEBUG_WEBDAV=1 on the gateway. One info line per request (method + path) after WebDAV auth.",
       );
     }
 

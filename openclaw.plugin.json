@@ -1,7 +1,7 @@
 {
   "id": "openclaw-webdav",
   "name": "WebDAV",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Mount your OpenClaw workspace as a WebDAV drive. Compatible with Cyberduck, macOS Finder, Windows Explorer, davfs2, and any RFC 4918 WebDAV client.",
   "author": "RageDotNet",
   "license": "MIT",
@@ -18,6 +18,11 @@
       "readOnly": {
         "type": "boolean",
         "description": "If true, all write operations (PUT, DELETE, MKCOL, COPY, MOVE, LOCK, UNLOCK) return 405.",
+        "default": false
+      },
+      "logging": {
+        "type": "boolean",
+        "description": "If true, log one info line per WebDAV request (method + path) after auth. Same as setting DEBUG_WEBDAV=1 on the gateway; either enables logging.",
         "default": false
       },
       "maxUploadSizeMb": {

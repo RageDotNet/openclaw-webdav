@@ -2,7 +2,7 @@
  * Route registration adapter — registers the /webdav/* route via api.registerHttpRoute
  * and dispatches incoming requests to the appropriate core WebDAV handlers.
  */
-import type { WebDavConfig } from "./config.js";
+import { type WebDavConfig, webDavRequestLoggingEnabled } from "./config.js";
 import type { StorageAdapter, LockManager, HandlerResult } from "../types.js";
 import type { OpenClawRequest, OpenClawResponse } from "./http.js";
 import { parseOpenClawRequest, sendHandlerResult } from "./http.js";
@@ -109,7 +109,7 @@ export function registerWebDavRoutes(
       const typedReq = req as OpenClawRequest;
       const typedRes = res as OpenClawResponse;
 
-      if (process.env.DEBUG_WEBDAV) {
+      if (webDavRequestLoggingEnabled(config.logging)) {
         const pathname = new URL(typedReq.url ?? "/", "http://localhost").pathname;
         api.logger.info?.(`[webdav] ${typedReq.method ?? "?"} ${pathname}`);
       }

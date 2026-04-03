@@ -61,6 +61,7 @@ Configure the plugin in OpenClaw settings → Plugins → WebDAV → Settings:
 | `rateLimitPerIp.enabled` | boolean | `true` | Enable per-IP rate limiting |
 | `rateLimitPerIp.max` | number | `100` | Max requests per window |
 | `rateLimitPerIp.windowSeconds` | number | `10` | Rate limit window in seconds |
+| `logging` | boolean | `false` | Log one `info` line per request (`METHOD` + path). Or set `DEBUG_WEBDAV=1` on the gateway; either enables the same logging |
 
 ### Example Configuration
 
@@ -73,7 +74,8 @@ Configure the plugin in OpenClaw settings → Plugins → WebDAV → Settings:
     "enabled": true,
     "max": 200,
     "windowSeconds": 10
-  }
+  },
+  "logging": false
 }
 ```
 
@@ -348,16 +350,16 @@ HTTP/1.1 413 Request Entity Too Large
 - davfs2 caches files locally; use `umount` and remount to refresh
 - Increase `cache_size` in `/etc/davfs2/davfs2.conf`
 
-### Debug Logging
+### Request logging
 
-Set **`DEBUG_WEBDAV=1`** on the **gateway** process. The plugin logs:
+Enable the same per-request **`info`** logs (one line per hit: `METHOD` + URL path) in either way:
 
-- At startup: a short note about where auth runs
-- **After** WebDAV auth succeeds: one line per request (`METHOD` + path) via **`api.logger.info`**
-  (under the **`[plugins]`** prefix)
+1. **Plugin config:** set **`logging`** to **`true`** under your WebDAV plugin entry (e.g. `plugins.entries.openclaw-webdav.config.logging` in OpenClaw config), **or**
+2. **Environment:** set **`DEBUG_WEBDAV=1`** on the **gateway** process.
 
-Failed **401** responses are decided inside the plugin before the verbose line; fix Basic/Bearer
-credentials first, then look for `[webdav]` request lines.
+If either is on, the plugin also logs a short **startup** note that request logging is active. Lines go through **`api.logger.info`** (often shown under a **`[plugins]`** prefix, depending on gateway log settings).
+
+The per-request line is emitted **at the start** of handling (before auth is checked), so you still see traffic for failing **401**s—use that to confirm the route is hit, then fix Basic/Bearer credentials if needed.
 
 ---
 

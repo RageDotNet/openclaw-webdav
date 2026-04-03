@@ -112,4 +112,4 @@ Please include:
 - WebDAV client and version
 - Steps to reproduce
 - Expected vs actual behavior
-- Relevant logs (enable with `DEBUG_WEBDAV=1`)
+- Relevant logs (enable with `logging: true` in plugin config and/or `DEBUG_WEBDAV=1` on the gateway)

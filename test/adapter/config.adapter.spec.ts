@@ -15,6 +15,11 @@ describe("parsePluginConfig", () => {
       expect(config.readOnly).toBe(false);
     });
 
+    it("defaults logging to false", () => {
+      const config = parsePluginConfig({}, WORKSPACE);
+      expect(config.logging).toBe(false);
+    });
+
     it("defaults maxUploadSizeMb to 100", () => {
       const config = parsePluginConfig({}, WORKSPACE);
       expect(config.maxUploadSizeMb).toBe(100);
@@ -44,6 +49,11 @@ describe("parsePluginConfig", () => {
     it("accepts readOnly: true", () => {
       const config = parsePluginConfig({ readOnly: true }, WORKSPACE);
       expect(config.readOnly).toBe(true);
+    });
+
+    it("accepts logging: true", () => {
+      const config = parsePluginConfig({ logging: true }, WORKSPACE);
+      expect(config.logging).toBe(true);
     });
 
     it("accepts custom maxUploadSizeMb", () => {
@@ -91,6 +101,12 @@ describe("parsePluginConfig", () => {
     it("throws for non-boolean readOnly", () => {
       expect(() => parsePluginConfig({ readOnly: "yes" }, WORKSPACE)).toThrow(
         /readOnly must be a boolean/,
+      );
+    });
+
+    it("throws for non-boolean logging", () => {
+      expect(() => parsePluginConfig({ logging: "yes" }, WORKSPACE)).toThrow(
+        /logging must be a boolean/,
       );
     });
 
