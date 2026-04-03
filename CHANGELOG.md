@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-04-03
+
+### Fixed
+
+- **CI / npm publish:** stop using `npm install -g npm@^11.5.1` on GitHub Actions (could leave a broken global npm with `MODULE_NOT_FOUND: promise-retry`). Publish with `npx npm@11.12.1 publish --provenance` instead.
+
 ## [0.1.7] - 2026-04-02
 
 ### Added
@@ -112,6 +118,7 @@ _No code changes — release-only to retry npm publish after Trusted Publishing 
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.1.8]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.8
 [0.1.7]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.7
 [0.1.6]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.6
 [0.1.5]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.5

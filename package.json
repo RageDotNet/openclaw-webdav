@@ -1,6 +1,6 @@
 {
   "name": "@ragenet/openclaw-webdav",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "WebDAV plugin for OpenClaw",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
