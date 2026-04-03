@@ -94,9 +94,9 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
-      - name: Use npm 11.5+ (trusted publishing)
-        run: npm install -g npm@^11.5.1
-
+      # Trusted publishing requires npm ≥11.5.1. Do not `npm install -g npm@…` on
+      # GitHub-hosted runners — it can leave a broken global CLI (MODULE_NOT_FOUND:
+      # promise-retry). Run a pinned npm via npx instead.
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run build
@@ -104,4 +104,4 @@ jobs:
       - run: pnpm test
 
       - name: Publish to npm
-        run: npm publish
+        run: npx --yes npm@11.12.1 publish --provenance
