@@ -16,7 +16,7 @@ Mount your OpenClaw workspace as a WebDAV drive. Access your files from any WebD
 
 ## Requirements
 
-- Node.js ≥ 18
+- Node.js ≥ 22
 - OpenClaw (any recent version)
 - `pnpm` (for development)
 
@@ -28,6 +28,15 @@ Mount your OpenClaw workspace as a WebDAV drive. Access your files from any WebD
 # In OpenClaw settings → Plugins → Browse Community Plugins
 # Search for "WebDAV" and click Install
 ```
+
+### From npm
+
+```bash
+pnpm add @ragenet/openclaw-webdav
+# or: npm install @ragenet/openclaw-webdav
+```
+
+Then register the plugin in OpenClaw (path or package name per your OpenClaw version’s plugin docs).
 
 ### Manual Installation
 

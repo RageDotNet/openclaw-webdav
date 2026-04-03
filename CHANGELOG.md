@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.3] - 2026-04-02
 
-### Fixed
+### Added
 
-- Documentation and package metadata now reference the canonical repository: https://github.com/RageDotNet/openclaw-webdav (replacing incorrect `openclaw-community` links).
+- GitHub Actions: **`release.yml`** creates a GitHub Release and `v*` tag when `package.json` version changes on `main`; **`publish.yml`** publishes to npm on tag push (npm **Trusted Publishing** / OIDC — no `NPM_TOKEN` in secrets when configured on npmjs.com).
+
+### Changed
+
+- npm package name **`@ragenet/openclaw-webdav`** with `publishConfig.access: public` and a **`files`** whitelist for the published tarball.
+- Documentation and metadata use the canonical repo **https://github.com/RageDotNet/openclaw-webdav** (replacing incorrect `openclaw-community` links).
 
 ## [0.1.2] - 2026-04-02
 
@@ -75,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.1.3]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.3
 [0.1.2]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.2
 [0.1.1]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.1
 [0.1.0]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.0

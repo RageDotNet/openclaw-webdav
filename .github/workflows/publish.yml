@@ -1,0 +1,59 @@
+# Publish @ragenet/openclaw-webdav to npm using Trusted Publishing (OIDC).
+# No NPM_TOKEN secret required once this is configured on npmjs.com.
+#
+# Setup (one-time):
+# 1. First publish: run `pnpm run build` && `npm publish` locally (or use a one-time
+#    granular token) so the package exists on npm.
+# 2. On npmjs.com → @ragenet/openclaw-webdav → Settings → Trusted publishing:
+#    - Provider: GitHub Actions
+#    - Repository: RageDotNet/openclaw-webdav (must match package.json "repository")
+#    - Workflow filename: publish.yml
+# 3. Optional hardening: Package Settings → Publishing access → restrict tokens after OIDC works.
+#
+# Runs when a version tag is pushed. Tags are created by release.yml when package.json
+# version changes on main (which also opens a GitHub Release). You can still push a
+# v* tag manually if needed.
+#
+# Requires: npm CLI ≥ 11.5.1, Node ≥ 22.14 (see https://docs.npmjs.com/trusted-publishers )
+
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write # OIDC to npm
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      # Trusted publishing needs a recent npm CLI
+      - name: Use npm 11.5+ (trusted publishing)
+        run: npm install -g npm@^11.5.1
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build
+
+      - run: pnpm test
+
+      # OIDC: do not set NODE_AUTH_TOKEN. Provenance is automatic for public repo + public package.
+      - name: Publish to npm
+        run: npm publish
