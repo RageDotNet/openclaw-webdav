@@ -66,21 +66,41 @@ describe("handleGet", () => {
     expect(res.statusCode).toBe(404);
   });
 
-  it("returns 200 with plain-text directory listing for collection", async () => {
+  it("returns 200 with HTML directory listing for collection", async () => {
     const adapter = await setupAdapter();
     const req = createMockRequest("GET", "/docs");
     const res = await invokeHandler((r) => handleGet(r, adapter, opts), req);
     expect(res.statusCode).toBe(200);
-    expect(String(res.headers["content-type"])).toContain("text/plain");
-    expect(res.body.toString()).toBe("");
+    expect(String(res.headers["content-type"])).toContain("text/html");
+    const html = res.body.toString();
+    expect(html).toContain("<!DOCTYPE html>");
+    expect(html).toContain("Index of /docs/");
+    expect(html).toContain("<ul>");
+    expect(html).toContain("</ul>");
+    expect(html).toContain("Parent directory");
   });
 
-  it("lists sorted entries with trailing slash for subdirs", async () => {
+  it("lists sorted entries as links with trailing slash for subdirs", async () => {
     const adapter = await setupAdapter();
     const req = createMockRequest("GET", "/");
     const res = await invokeHandler((r) => handleGet(r, adapter, opts), req);
     expect(res.statusCode).toBe(200);
-    expect(res.body.toString()).toBe("docs/\nfile.txt\nimage.png\n");
+    const html = res.body.toString();
+    expect(html).toContain('<a href="/docs/">docs/</a>');
+    expect(html).toContain('<a href="/file.txt">file.txt</a>');
+    expect(html).toContain('<a href="/image.png">image.png</a>');
+    expect(html.indexOf("/docs/")).toBeLessThan(html.indexOf("/file.txt"));
+  });
+
+  it("prefixes hrefs with routePrefix when configured", async () => {
+    const adapter = await setupAdapter();
+    const req = createMockRequest("GET", "/");
+    const res = await invokeHandler((r) => handleGet(r, adapter, { ...opts, routePrefix: "/webdav" }), req);
+    expect(res.statusCode).toBe(200);
+    const html = res.body.toString();
+    expect(html).toContain('<a href="/webdav/docs/">docs/</a>');
+    expect(html).toContain('<a href="/webdav/file.txt">file.txt</a>');
+    expect(html).toContain("Index of /webdav/");
   });
 
   it("returns 403 for path outside workspace", async () => {

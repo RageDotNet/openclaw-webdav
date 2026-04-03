@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-04-02
+
+### Added
+
+- **Conformance:** run litmus against a remote WebDAV URL with optional Basic auth via `WEBDAV_CONFORMANCE_URL`, `WEBDAV_CONFORMANCE_PASSWORD`, and optional `WEBDAV_CONFORMANCE_USER` (see `.conformance/run-litmus.ts`).
+- **GET (collections):** HTML directory index with clickable links for browsers; `routePrefix` is applied so links match the gateway mount (e.g. `/webdav/...`).
+
+### Fixed
+
+- **PROPFIND:** `D:href` values include the HTTP mount prefix so clients (e.g. Windows Explorer) see directory contents instead of an empty folder.
+- **Conformance server:** correct `../src/` imports from `.conformance/server.ts` so the standalone litmus server starts from the package root.
+
+### Changed
+
+- Shared `normalizeRoutePrefix` in `src/core/util/routePrefix.ts` (used by PROPFIND and HTML listings).
+
 ## [0.1.6] - 2026-04-02
 
 ### Fixed
@@ -96,6 +112,7 @@ _No code changes — release-only to retry npm publish after Trusted Publishing 
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.1.7]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.7
 [0.1.6]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.6
 [0.1.5]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.5
 [0.1.4]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.4

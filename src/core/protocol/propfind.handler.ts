@@ -6,9 +6,15 @@ import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
 import { formatWebDavEtag } from "../util/webDavEtag.js";
 import { buildErrorXml } from "../util/errorXml.js";
+import { normalizeRoutePrefix } from "../util/routePrefix.js";
 
 export interface PropfindHandlerOptions {
   workspaceDir: string;
+  /**
+   * Gateway mount path (e.g. `/webdav`). Prepended to every `D:href` so multistatus
+   * URLs match the path space clients use (required for Windows Explorer and others).
+   */
+  routePrefix?: string;
   /** Maximum recursion depth for Depth:infinity (default 20) */
   maxDepth?: number;
 }
@@ -21,12 +27,31 @@ interface ResourceInfo {
   filePath: string;
 }
 
-function buildHrefForResource(filePath: string, workspaceDir: string, isDir: boolean): string {
+function buildHrefForResource(
+  filePath: string,
+  workspaceDir: string,
+  isDir: boolean,
+  routePrefix?: string,
+): string {
+  const mount = normalizeRoutePrefix(routePrefix);
   const normalized = filePath.replace(/\\/g, "/");
   const normalizedWs = workspaceDir.replace(/\\/g, "/");
   const rel = path.posix.relative(normalizedWs, normalized);
-  if (rel === "" || rel === ".") return "/";
-  return "/" + rel + (isDir ? "/" : "");
+
+  let pathPart: string;
+  if (rel === "" || rel === ".") {
+    pathPart = "/";
+  } else {
+    pathPart = "/" + rel + (isDir ? "/" : "");
+  }
+
+  if (!mount) {
+    return pathPart;
+  }
+  if (pathPart === "/") {
+    return `${mount}/`;
+  }
+  return `${mount}${pathPart}`;
 }
 
 export async function handlePropfind(
@@ -86,7 +111,12 @@ export async function handlePropfind(
   async function collect(filePath: string, stat: StatResult, currentDepth: number): Promise<void> {
     if (depthLimitHit) return;
 
-    const href = buildHrefForResource(filePath, opts.workspaceDir, stat.isDirectory);
+    const href = buildHrefForResource(
+      filePath,
+      opts.workspaceDir,
+      stat.isDirectory,
+      opts.routePrefix,
+    );
     resources.push({ href, stat, filePath });
 
     if (!stat.isDirectory) return;

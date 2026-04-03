@@ -1,10 +1,11 @@
 import type { HandlerResult, ParsedRequest, StorageAdapter } from "../../types.js";
 import { StorageError } from "../../types.js";
 import { validatePath } from "../storage/pathValidation.js";
-import { buildDirectoryListingPlainText, buildFileHeaders } from "./get.handler.js";
+import { buildDirectoryListingHtml, buildFileHeaders } from "./get.handler.js";
 
 export interface HeadHandlerOptions {
   workspaceDir: string;
+  routePrefix?: string;
 }
 
 export async function handleHead(
@@ -30,11 +31,16 @@ export async function handleHead(
   }
 
   if (resourceStat.isDirectory) {
-    const { byteLength } = await buildDirectoryListingPlainText(storage, normalizedPath);
+    const { byteLength } = await buildDirectoryListingHtml(
+      storage,
+      normalizedPath,
+      req.path,
+      opts.routePrefix,
+    );
     return {
       status: 200,
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Type": "text/html; charset=utf-8",
         "Content-Length": byteLength,
         "Last-Modified": resourceStat.mtime.toUTCString(),
       },

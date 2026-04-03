@@ -150,6 +150,29 @@ describe("handlePropfind — Depth:1", () => {
   });
 });
 
+describe("handlePropfind — routePrefix (gateway mount)", () => {
+  it("prefixes D:href with routePrefix for root and children", async () => {
+    const adapter = await setupAdapter();
+    const prefixed = { workspaceDir: WORKSPACE, routePrefix: "/webdav" };
+    const req = createMockRequest("PROPFIND", "/", { depth: "1" });
+    const res = await invokeHandler((r) => handlePropfind(r, adapter, prefixed), req);
+    const xml = res.body.toString();
+    expect(xml).toContain("<D:href>/webdav/</D:href>");
+    expect(xml).toContain("<D:href>/webdav/file.txt</D:href>");
+  });
+
+  it("prefixes nested collection hrefs", async () => {
+    const adapter = await setupAdapter();
+    const prefixed = { workspaceDir: WORKSPACE, routePrefix: "/plugins/dav" };
+    const req = createMockRequest("PROPFIND", "/docs", { depth: "1" });
+    const res = await invokeHandler((r) => handlePropfind(r, adapter, prefixed), req);
+    const xml = res.body.toString();
+    expect(xml).toContain("<D:href>/plugins/dav/docs/</D:href>");
+    expect(xml).toContain("<D:href>/plugins/dav/docs/readme.md</D:href>");
+    expect(xml).toContain("<D:href>/plugins/dav/docs/sub/</D:href>");
+  });
+});
+
 describe("handlePropfind — Depth:infinity", () => {
   it("returns all descendants recursively", async () => {
     const adapter = await setupAdapter();

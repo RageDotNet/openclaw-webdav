@@ -197,7 +197,12 @@ async function dispatch(
   parsedReq: import("../types.js").ParsedRequest,
   storage: StorageAdapter,
   lockManager: LockManager,
-  handlerOpts: { workspaceDir: string; serverHost?: string; lockManager: LockManager },
+  handlerOpts: {
+    workspaceDir: string;
+    serverHost?: string;
+    lockManager: LockManager;
+    routePrefix?: string;
+  },
 ): Promise<HandlerResult> {
   switch (method) {
     case "OPTIONS":
