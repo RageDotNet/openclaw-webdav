@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-04-02
+
+### Fixed
+
+- **npm publish in CI:** Tags created by `gh release create` with the default `GITHUB_TOKEN` do not trigger separate `on: push: tags` workflows ([GitHub docs](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow)). Publishing now runs in **`release.yml`** immediately after a release is created. Configure npm **Trusted Publishing** with workflow filename **`release.yml`** (remove/replace any `publish.yml` entry).
+
 ## [0.1.3] - 2026-04-02
 
 ### Added
 
-- GitHub Actions: **`release.yml`** creates a GitHub Release and `v*` tag when `package.json` version changes on `main`; **`publish.yml`** publishes to npm on tag push (npm **Trusted Publishing** / OIDC — no `NPM_TOKEN` in secrets when configured on npmjs.com).
+- GitHub Actions: **`release.yml`** creates a GitHub Release and version tag when `package.json` changes on `main`; **`publish.yml`** intended to publish to npm on tag push (see v0.1.4 — tag events from `GITHUB_TOKEN` do not start new workflows).
 
 ### Changed
 
@@ -80,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.1.4]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.4
 [0.1.3]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.3
 [0.1.2]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.2
 [0.1.1]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.1

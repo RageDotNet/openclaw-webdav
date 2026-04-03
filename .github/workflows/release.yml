@@ -1,16 +1,18 @@
-# When package.json "version" changes on main, create a GitHub Release + tag vX.Y.Z.
-# That tag push triggers publish.yml → npm (Trusted Publishing).
+# When package.json "version" changes on main:
+# 1) Create GitHub Release + tag vX.Y.Z (gh release create)
+# 2) Publish to npm in the same workflow run (Trusted Publishing / OIDC)
 #
-# Flow: bump version on main → merge/push → this workflow → tag v0.1.3 → publish.yml → npm
+# Why npm is not a separate "on tag push" workflow: events caused by the default
+# GITHUB_TOKEN (including tags/releases created by gh in Actions) do NOT trigger
+# other workflows. See: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
+#
+# npm Trusted Publishing: configure workflow filename **release.yml** (not publish.yml).
 
 name: GitHub Release
 
 on:
   push:
     branches: [main]
-
-permissions:
-  contents: write # create release and tag
 
 concurrency:
   group: release-${{ github.repository }}
@@ -19,20 +21,28 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.bump.outputs.released }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Detect version bump and create release
+        id: bump
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
+          RELEASED=false
+
           NEW=$(jq -r '.version // empty' package.json)
           if [ -z "$NEW" ]; then
             echo "No version in package.json"
+            echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -44,12 +54,14 @@ jobs:
 
           if [ "$NEW" = "$OLD" ]; then
             echo "Version unchanged ($NEW), skipping release."
+            echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           TAG="v${NEW}"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists, skipping."
+            echo "released=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -58,3 +70,39 @@ jobs:
             --title "$TAG" \
             --generate-notes \
             --target "${{ github.sha }}"
+
+          RELEASED=true
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+  publish-npm:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Use npm 11.5+ (trusted publishing)
+        run: npm install -g npm@^11.5.1
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build
+
+      - run: pnpm test
+
+      - name: Publish to npm
+        run: npm publish
