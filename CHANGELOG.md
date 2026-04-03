@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-04-02
+
+### Fixed
+
+- **publish-npm:** drop pinned pnpm `version` in `release.yml` so `pnpm/action-setup` uses `packageManager` from `package.json` only (avoids `ERR_PNPM_BAD_PM_VERSION`).
+
 ## [0.1.5] - 2026-04-02
 
 _No code changes — release-only to retry npm publish after Trusted Publishing workflow was updated to `release.yml` on npmjs.com._
@@ -90,6 +96,7 @@ _No code changes — release-only to retry npm publish after Trusted Publishing 
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.1.6]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.6
 [0.1.5]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.5
 [0.1.4]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.4
 [0.1.3]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.3
