@@ -142,10 +142,10 @@ Replace `localhost:18789` with your OpenClaw host and port.
 
 1. Open File Explorer
 2. Right-click "This PC" → Add a network location
-4. Enter your endpoint in this format: `\\myclaw.tail123456.ts.net@SSL\webdav\`
-5. Check "Connect using different credentials"
-6. Enter any username, and your openclaw token as a password
-7. Click Finish
+3. Enter your endpoint in this format: `\\myclaw.tail123456.ts.net@SSL\webdav\`
+4. Check "Connect using different credentials"
+5. Enter any username, and your openclaw token as a password
+6. Click Finish
 
 **Alternative**: Use the Run dialog (Win+R):
 ```
