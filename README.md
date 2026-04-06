@@ -1,6 +1,28 @@
 # OpenClaw WebDAV Plugin
 
-Mount your OpenClaw workspace as a WebDAV drive. Access your files from any WebDAV client — Cyberduck, macOS Finder, Windows Explorer, davfs2, rclone, iOS Files, and more.
+Easily collaborate with your agent in their workspace by accessing their files using your laptop or phone from anywhere.
+
+OpenClaw-WebDAV is a zero-dependency WebDAV plugin for OpenClaw that mounts your workspace as a network drive accessible from:
+
+- macOS Finder, Windows Explorer, Linux davfs2
+- iOS Files, Android Solid Explorer
+- Power tools: Cyberduck, rclone, any WebDAV client
+
+Full RFC 4918 compliance, auth-integrated, rate-limited, traversal-protected.
+Makes collaboration possible and pleasant for OpenClaw's deployed in NemoClaw, VPC's, sandboxes, or other isolated deployments.
+
+
+![til](./docs/usage_animation.gif)
+
+
+## Quickstart
+
+1. Run `openclaw plugins install @ragenet/openclaw-webdav` and restart your gateway.
+2. Add a network location to your finder/explorer/webdav-client using your tailscale url `https://myclaw.tail123456.ts.net/webdav/` or `\\myclaw.tail123456.ts.net@SSL\webdav\`
+3. Login using any username and your token from `openclaw dashboard` as your password
+
+![CI](https://github.com/RageDotNet/openclaw-webdav/actions/workflows/ci.yml/badge.svg)
+
 
 ## Features
 
@@ -16,11 +38,19 @@ Mount your OpenClaw workspace as a WebDAV drive. Access your files from any WebD
 
 ## Requirements
 
-- Node.js ≥ 22
+- Node.js ≥ 22 (an openclaw prereq)
 - OpenClaw (any recent version)
 - `pnpm` (for development)
+- tailscale, or other https transport for your claw
 
 ## Installation
+
+
+### From the openclaw CLI
+
+```bash
+openclaw plugins install @ragenet/openclaw-webdav
+```
 
 ### From clawhub.ai
 
@@ -65,6 +95,8 @@ Configure the plugin in OpenClaw settings → Plugins → WebDAV → Settings:
 
 ### Example Configuration
 
+Configuration lives under `plugins.entries.openclaw-webdav.config`
+
 ```json
 {
   "rootPath": "/home/user/workspace",
@@ -94,7 +126,7 @@ Replace `localhost:18789` with your OpenClaw host and port.
 
 1. Open Finder
 2. Go → Connect to Server (⌘K)
-3. Enter: `http://localhost:18789/webdav/`
+3. Enter your endpoint like this `https://myclaw.tail123456.ts.net/webdav/`
 4. Click Connect
 5. Enter your OpenClaw credentials when prompted
 
@@ -109,22 +141,21 @@ Replace `localhost:18789` with your OpenClaw host and port.
 ### Windows Explorer (Map Network Drive)
 
 1. Open File Explorer
-2. Right-click "This PC" → Map network drive
-3. Choose a drive letter (e.g., Z:)
-4. Folder: `http://localhost:18789/webdav/`
+2. Right-click "This PC" → Add a network location
+4. Enter your endpoint in this format: `\\myclaw.tail123456.ts.net@SSL\webdav\`
 5. Check "Connect using different credentials"
-6. Enter your OpenClaw credentials
+6. Enter any username, and your openclaw token as a password
 7. Click Finish
 
 **Alternative**: Use the Run dialog (Win+R):
 ```
-\\localhost@18789\webdav
+\\myclaw.tail123456.ts.net@SSL\webdav\
 ```
 
 **Known quirks**:
 - Windows Explorer requires LOCK/UNLOCK for write operations (fully supported)
 - PROPPATCH for Win32 attributes returns 405 (harmless, basic CRUD still works)
-- If connection fails, try `http://localhost:18789/webdav` (without trailing slash)
+- If connection fails, try `\\myclaw.tail123456.ts.net@SSL\webdav` (without trailing slash)
 
 ---
 
@@ -138,17 +169,17 @@ sudo dnf install davfs2  # Fedora/RHEL
 
 Mount the WebDAV drive:
 ```bash
-sudo mount -t davfs http://localhost:18789/webdav/ /mnt/webdav
+sudo mount -t davfs https://myclaw.tail123456.ts.net/webdav/ /mnt/webdav
 ```
 
 For persistent mounting, add to `/etc/fstab`:
 ```
-http://localhost:18789/webdav/ /mnt/webdav davfs user,noauto 0 0
+https://myclaw.tail123456.ts.net/webdav/ /mnt/webdav davfs user,noauto 0 0
 ```
 
 Store credentials in `/etc/davfs2/secrets`:
 ```
-http://localhost:18789/webdav/ username password
+https://myclaw.tail123456.ts.net/webdav/ username password
 ```
 
 **Known quirks**:
@@ -202,7 +233,7 @@ rclone mount openclaw: /mnt/openclaw
 
 1. Open the Files app
 2. Tap "..." → Connect to Server
-3. Enter: `http://your-openclaw-host:18789/webdav/`
+3. Enter: `https://myclaw.tail123456.ts.net/webdav/`
 4. Enter credentials
 5. Tap Connect
 
