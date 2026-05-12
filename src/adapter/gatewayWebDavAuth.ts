@@ -1,7 +1,8 @@
 /**
  * WebDAV HTTP authentication: Basic (password = gateway token or gateway password) or Bearer.
- * Username in Basic auth is ignored. Uses OpenClaw's resolveGatewayAuth when available.
+ * Username in Basic auth is ignored. Uses OpenClaw's resolveGatewayAuth from gateway-runtime when available.
  */
+import type { GatewayAuthConfig } from "openclaw/plugin-sdk/config-types";
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { HandlerResult } from "../types.js";
 import type { OpenClawRequest } from "./http.js";
@@ -123,10 +124,10 @@ function mapResolvedToExpectation(auth: {
 
 export async function loadWebDavAuthExpectation(openClawConfig: unknown): Promise<WebDavAuthExpectation> {
   try {
-    const mod = await import("openclaw/plugin-sdk/browser-support");
+    const { resolveGatewayAuth } = await import("openclaw/plugin-sdk/gateway-runtime");
     const authConfig = extractGatewayAuthConfig(openClawConfig);
-    const resolved = mod.resolveGatewayAuth({
-      authConfig,
+    const resolved = resolveGatewayAuth({
+      authConfig: authConfig as GatewayAuthConfig | null,
       env: process.env,
     });
     return mapResolvedToExpectation(resolved);

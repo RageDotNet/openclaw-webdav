@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-05-11
+
+### Fixed
+
+- **Gateway startup:** declare `activation.onStartup: true` in `openclaw.plugin.json` so OpenClaw includes this plugin in the gateway startup plugin plan (HTTP routes are registered from `register()`). Without it, the plugin never loads at startup and `/webdav` is not mapped unless you rely on unrelated deferred paths.
+
+### Changed
+
+- **Gateway auth resolution:** `loadWebDavAuthExpectation` now imports `resolveGatewayAuth` from `openclaw/plugin-sdk/gateway-runtime` instead of `openclaw/plugin-sdk/browser-support`. The previous subpath was not part of OpenClaw’s public `exports` map; `gateway-runtime` is the documented generic contract and restores Vitest (and tooling) resolution for adapter tests that pull in `gatewayWebDavAuth`.
+
+### Removed
+
+- **`src/shims/openclaw-browser-support.d.ts`:** dropped the ambient module shim for the old import path.
+
 ## [0.1.9] - 2026-04-03
 
 ### Added
@@ -124,6 +138,7 @@ _No code changes — release-only to retry npm publish after Trusted Publishing 
 - Lock state is in-memory and lost on server restart.
 - Shared lock semantics are accepted but not fully distinguished from exclusive locks.
 
+[0.2.0]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.2.0
 [0.1.9]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.9
 [0.1.8]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.8
 [0.1.7]: https://github.com/RageDotNet/openclaw-webdav/releases/tag/v0.1.7

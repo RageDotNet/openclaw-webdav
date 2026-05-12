@@ -79,6 +79,15 @@ pnpm run build
 
 Then add the plugin path to your OpenClaw configuration.
 
+### Enabling on the gateway (required)
+
+OpenClaw only loads **HTTP route** plugins during gateway startup when the manifest declares **`activation.onStartup: true`** (this package does). You must still **opt the plugin in** so it is part of the startup load plan:
+
+1. **Turn the plugin on** — either set `plugins.entries.openclaw-webdav.enabled` to **`true`**, or add **`openclaw-webdav`** to `plugins.allow` if you use an allowlist (a non-empty `plugins.allow` blocks every plugin not listed).
+2. **Install / refresh** — run `openclaw plugins install …` (or your path install) so the plugin appears in the installed index, then **restart the gateway**.
+
+If the plugin is missing from startup, the gateway log’s “N plugins” line will not include `openclaw-webdav`, and `/webdav` will fall through to whatever default handler owns that path (often JSON 401 from gateway auth).
+
 ## Configuration
 
 Configure the plugin in OpenClaw settings → Plugins → WebDAV → Settings:

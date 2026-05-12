@@ -1,6 +1,6 @@
 {
   "name": "@ragenet/openclaw-webdav",
-  "version": "0.1.11",
+  "version": "0.2.0",
   "description": "WebDAV plugin for OpenClaw",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,8 +12,8 @@
       "minGatewayVersion": "2026.4.5"
     },
     "build": {
-      "openclawVersion": "2026.4.5",
-      "pluginSdkVersion": "2026.4.5"
+      "openclawVersion": "2026.5.7",
+      "pluginSdkVersion": "2026.5.7"
     }
   },
   "engines": {
@@ -71,7 +71,7 @@
     "xmlbuilder2": "^4.0.3"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.4.5"
+    "openclaw": ">=2026.5.7"
   },
   "peerDependenciesMeta": {
     "openclaw": {
