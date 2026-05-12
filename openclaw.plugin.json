@@ -4,7 +4,7 @@
     "onStartup": true
   },
   "name": "WebDAV",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Mount your OpenClaw workspace as a WebDAV drive. Compatible with Cyberduck, macOS Finder, Windows Explorer, davfs2, and any RFC 4918 WebDAV client.",
   "author": "RageDotNet",
   "license": "MIT",
